@@ -23,6 +23,8 @@ jobs:
 
       - name: Build
         run: hugo --minify
+        env:
+          TZ: 'Asia/Tokyo'
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
