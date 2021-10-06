@@ -1,6 +1,6 @@
 ---
 title: About me
-date: 2021-10-07 00:00:00
+date: 2021-10-07 00:00:00 +0900
 ---
 I'm Kyohei Atarashi, a software engineer.
 
