@@ -1,7 +1,6 @@
 ---
 title: "LaTeX Test"
 date: 2021-10-16 03:00:00 +0900
-draft: true
 tags:
     - test
 categories:
