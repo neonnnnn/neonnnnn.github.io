@@ -1,6 +1,6 @@
 ---
 title: "LaTeX Test"
-date: 2021-10-16T03:00:00+09:00
+date: 2021-10-16 03:00:00 +0900
 draft: true
 tags:
     - test
