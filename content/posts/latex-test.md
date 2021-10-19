@@ -23,7 +23,7 @@ Github Pages及びHugoの導入自体は非常に簡単で、公式の[quick-sta
 記事を書くにあたって、数式の記載は避けられない。
 このような場合、[MathJax](https://www.mathjax.org/)が定番だと思っていたが、ちょっと調べて見た感じだと、どうやら[KaTeX](https://katex.org/)というのが最近は良いらしい。
 が、CactusでMathJaxが標準でサポートされているので、今回はそのままMathJaxを使うことにする。
-速度に不満が出てきたり、Hugoに興味がで場合にKaTeXへの以降を考えたい。
+速度に不満が出てきたり、Hugoに興味がでた場合にKaTeXへの以降を考えたい。
 
 CactusでのMathJaxの利用は簡単で、front matterに`mathjax: true`と記載すれば良い。
 以下、簡単なテスト。
