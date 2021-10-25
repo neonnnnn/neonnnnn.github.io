@@ -224,13 +224,13 @@ B_n = \{x \in \mathbb{R}^n \mid 0 \le x^{(i)} \le 1, i=1,\ldots, n\}.
 <dt>定理1.1.2</dt>
 <dd>$\varepsilon &lt; L/2$とする。このとき、各0階の最適化アルゴリズムに対して、精度$\varepsilon$の解を得るために、少なくとも$\lfloor L/2\varepsilon \rfloor^n$回のオラクル呼び出しを必要とする関数$f$が存在する。</dd>
 <dt>証明</dt>
-<dd>$p=\lfloor L/2\varepsilon \rfloor$する。
+<dd>$p=\lfloor L/2\varepsilon \rfloor$とする。
 最適化アルゴリズムを$N &lt; p^n$回シミュレートして、その結果を元に、上で示された回数の反復が必要な意地の悪い関数を作ることで主張を導く。
-具体的には、最小値が$-\varepsilon$であるが、$N$回のオラクル呼び出しの点での最小値は$0$であるような関数を作る。
+具体的には、最小値が$-\varepsilon$だが、$N$回のオラクル呼び出しの点での最小値は$0$であるような関数を作る。
 この場合、明らかに$\varepsilon$の精度の解を求められていないので、少なくとも$p^n$回のオラクル呼び出しが必要となる。</dd>
 <dd>すべてのオラクル呼び出しの点$x_k$、$0 \le k &lt; N$に対して、$f(x_k)=0$を返すとする。
 さらに、$B_n$の各次元を$p$分割して、$p^n$個のグリッドを作る。
-このとき、$N &lt; p^n$であるので、少なくとも１つのグリッドは、呼び出された点を$x_k$を一つも含まない。
+このとき、$N &lt; p^n$であるので、少なくとも１つのグリッドは、呼び出された点を一つも含まない。
 そのようなグリッドを一つ適当にとって、その中心を$x^*$とする。
 今、距離は$\ell_{\infty}$ノルムで測っているので、各グリッドの中心と端点の距離は$\varepsilon/L$である。
 そして、以下の関数を考える：
@@ -313,16 +313,16 @@ $0_{k, p}$は$(k \times p)$の零行列です。</p>
 <dt>証明</dt>
 <dd>ヘッセ行列に関する二次形式が上下から抑えられることを示せば良い。
 \begin{align}
-\langle \nabla^2f_k(x)h, h \rangle = \frac{L}{4} \left \{ \frac{1}{2} \left[ \left(h^{(1)}\right)^2 + \sum_{i=1}^{k-1} \left(h^{(i)} - h^{(i+1)}\right)^2 + \left(h^{(k)}\right)^2 \right]\right\} \ge 0
+\langle \nabla^2f_k(x)h, h \rangle = \frac{L}{4} \left \{\left[ \left(h^{(1)}\right)^2 + \sum_{i=1}^{k-1} \left( h^{(i)} - h^{(i+1)}\right)^2 + \left(h^{(k)}\right)^2 \right]\right\} \ge 0
 \end{align}
 より、ヘッセ行列は半正定値、故に$f_k$は凸。
 \begin{align}
-\langle \nabla^2f_k(x)h, h \rangle = \frac{L}{4} \left \{ \frac{1}{2} \left[ \left(h^{(1)}\right)^2 + 2\sum_{i=1}^{k-1} \left(h^{(i)} + h^{(i+1)}\right)^2 + \left(h^{(k)}\right)^2 \right]\right\} \le L \langle h, h\rangle
+\langle \nabla^2f_k(x)h, h \rangle \le \frac{L}{4} \left \{\left[ \left(h^{(1)}\right)^2 + 2\sum_{i=1}^{k-1}\left( \left( h^{(i)}\right)^2 + \left(h^{(i+1)}\right)^2\right) + \left(h^{(k)}\right)^2 \right]\right\} \le L \langle h, h\rangle
 \end{align}
 より、$f_k$は$L$-平滑である。</dd>
 </dl>
 <p>次に、最適解の性質について整理します。
-最適解$f^* _k$および$\lVert \bar{x} _k\rVert^2_2$、$\bar{x} _k=\mathrm{argmin}_{x \in \mathbb{R}^n } f_k (x)$は、$1/k$のオーダーで減衰します/上から抑えられます。</p>
+最適解$f^* _k$および$\lVert \bar{x} _k\rVert^2_2$、$\bar{x} _k=\mathrm{argmin}_{x \in \mathbb{R}^n } f_k (x)$は、それぞれ、$1/k$のオーダーで減衰します・$k$で上から抑えられます。</p>
 <dl>
 <dt>補題：$f_k$の最適解の性質</dt>
 <dd>$\bar{x} _ k$と$f^* _k=f_k(\bar{x} _ k)$について、
@@ -333,7 +333,7 @@ f^* _k &= \frac{L}{8}\left(-1+\frac{1}{k+1}\right), \\\<br>
 が成り立つ。</dd>
 <dt>証明</dt>
 <dd>\begin{align}
-\nabla f_k(x) = A_k x - e_1
+\nabla f_k(x) = \frac{L}{4} \left( A_k x - e_1 \right)
 \end{align}
 より、最適解は$\bar{x} _k$は
 \begin{align}
@@ -352,7 +352,7 @@ $\bar{x}_k$のノルムについては、
 &= k - \frac{2}{k+1}\sum_{i=1}^k i + \frac{1}{(k+1)^2} \sum_{i=1}^k i^2 \\\<br>
 &\le k - \frac{2}{k+1}\cdot \frac{k(k+1)}{2} + \frac{1}{(k+1)^2}\cdot \frac{(k+1)^3}{3} = \frac{1}{3}(k+1).
 \end{align}
-ただし、最後の不等式では、$\sum_{i=1}^k i^2 = k(k+1)(2k+1)/6 \le (k+1)^3 / 3$を用いた。</dd>
+ただし、最後の不等式では$\sum_{i=1}^k i^2 = k(k+1)(2k+1)/6 \le (k+1)^3 / 3$を用いた。</dd>
 </dl>
 <p>次に、生成される解の性質について述べます。
 $\mathbb{R}^{k, n}$を、$n$次元のうち後ろの$n-k$個が$0$であるようなベクトルの集合、すなわち、
@@ -360,7 +360,7 @@ $\mathbb{R}^{k, n}$を、$n$次元のうち後ろの$n-k$個が$0$であるよ�
 \mathbb{R}^{k, n} := \{ x \in \mathbb{R}^n \mid x^{(i)}=0, k+1 \le i \le n \}
 \end{align}
 とします。
-このとき、前述の仮定を満たす任意の1階の最適化アルゴリズムで$k$回目に生成される解は$\mathbb{R}^{k, n}$に属します。</p>
+このとき、前述の仮定を満たす任意の1階の最適化アルゴリズムで、$k$回目に生成される解$x_k$は$\mathbb{R}^{k, n}$に属します。</p>
 <dl>
 <dt>補題2.1.5（生成される解の性質）</dt>
 <dd>$x_0=0$とする。
@@ -392,16 +392,16 @@ f_p(x_k) \ge f_k^*
 <h2 id=主結果の証明>主結果の証明</h2>
 <p>ここまでの補題で、以下がわかりました:</p>
 <ol>
-<li>$f^* _k$の値（$O(1/k)$）</li>
-<li>$\lVert \bar{x}_k \rVert_2^2$の上限（$O(1/k)$）</li>
+<li>$f^* _k$の値（$\Theta(1/k)$）</li>
+<li>$\lVert \bar{x}_k \rVert_2^2$の上限（$O(k)$）</li>
 <li>（1階の最適化アルゴリズムが生成する$x_k$について）$f_p(x_k) \ge f^* _k$</li>
 </ol>
 <p>また、我々が導出したいのは、以下でした：</p>
 <ol>
-<li>$f(x_k) - f^*$の下限（$O(1/k)$）</li>
-<li>$\lVert x_k \rVert_2^2$の上限（$O(1/k)$）</li>
+<li>$f(x_k) - f^*$の下限（$\Omega(1/k)$）</li>
+<li>$\lVert x_k \rVert_2^2$の上限（$O(k)$）</li>
 </ol>
-<p>わかったことの1つめと3つめより、適当な$p$を選んで$f=f_p$とすれば、導出したいことの１つ目である$f_p(x_k) - f^*(x_k)$の下限を導くことができそうです。
+<p>わかったことの1つ目と3つ目より、適当な$p$を選んで$f=f_p$とすれば、導出したいことの１つ目である$f_p(x_k) - f^*$の下限を導くことができそうです。
 また、わかったことの2つめより、導出したいことの2つ目は直ちに導かれます。</p>
 <dl>
 <dt>（再掲）定理2.1.7</dt>
@@ -411,7 +411,8 @@ f(x_k) - f(x^* ) &\ge \frac{3L\lVert x_0 - x^* \rVert^2_2}{32(k+1)^2}
 \end{align}
 となるものが存在する。</dd>
 <dt>証明</dt>
-<dd>$f=f_{2k+1}$を最適化する関数として考える。このとき、
+<dd>$f=f_{2k+1}$を最適化する関数として考える。
+このとき、
 \begin{align}
 f^* &= \frac{L}{8} \left(-1 + \frac{1}{2k+2}\right)
 \end{align}
