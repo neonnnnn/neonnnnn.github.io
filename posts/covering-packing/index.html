@@ -1,0 +1,537 @@
+<!doctype html><html lang=ja-jp>
+<head>
+<link rel=preload href=/lib/font-awesome/webfonts/fa-brands-400.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<link rel=preload href=/lib/font-awesome/webfonts/fa-regular-400.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<link rel=preload href=/lib/font-awesome/webfonts/fa-solid-900.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<link rel=preload href=/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<script type=text/javascript src=https://latest.cactus.chat/cactus.js></script>
+<link rel=stylesheet href=https://latest.cactus.chat/style.css type=text/css>
+<meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge">
+<title> 被覆数・充填数 | 積んでるゲームのサントラを聴く</title>
+<link rel=canonical href=https://neonnnnn.github.io/posts/covering-packing/>
+<meta name=description content="勉強したことに関するメモ置き場です。自分の理解の向上・整理のためだけに運用されています。">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="all,follow">
+<meta name=googlebot content="index,follow,snippet,archive">
+<meta property="og:title" content="被覆数・充填数">
+<meta property="og:description" content="はじめに 応用数学的な分野でしばしば用いられる道具として、Covering Number（被覆数）とPacking Number（充填数）と呼ばれるものがあります。 ちょっと嘘があるのですが、一言で表現すると、 距離空間上の集合に対して、被覆数は（ある指定された半径の）球を何個持ってこれば覆うことができるか、充填数は球を何個詰め込むことができるか、を表します。 前回の記事の0階の最適化アルゴリズムの解析のユークリッドノルムへの拡張が、充填数の簡単な応用例になっているなと思い、記憶の呼び起こしも含めて簡単にまとめてみることにしました。 思いの外長くなってしまったので（体感）、実際に応用してみるのは次回にして、今回は被覆数・充填数の導入にとどめます（記事数稼ぎ）。
+文献[1]が簡潔にまとめてくれているので、表記、ステートメントおよびその番号についてはそちらを参照して書くことにします（ところどころ簡略化しますが）。
+被覆数と充填数 前述の通り、距離空間上の集合と$\varepsilon>0$に対して、被覆数はその集合を覆うために必要な半径$\varepsilon$の球の個数です。 集合を球で覆っているときの、球の中心の集合を$\varepsilon$-netと呼びます。 フォーマルに定義すると以下のようになります。
+ 定義 4.2.1（$\varepsilon$-net） $(T, d)$を距離空間とする。 $T$の部分集合$K \subset T$とある正の実数$\varepsilon > 0$を考える。 $K$の部分集合$\mathcal{N} \subset K$は、$K$の各点が$\mathcal{N}$のある点と距離が$\varepsilon$以下であるとき、すなわち、 \begin{align} \forall x \in K\ \exists x_0 \in \mathcal{N}: \ d(x, x_0) \le \varepsilon \end{align} であるとき、$K$の$\varepsilon$-netであるという。 定義 4.2.2（被覆数） $K$の$\varepsilon$-netの最小の濃度を$K$の（$\varepsilon$）被覆数と呼び、$\mathcal{N}(K, d, \varepsilon)$と書く。  被覆数をもう少しフォーマルに書くと、以下のようになります： \begin{align} \mathcal{N}(K, d, \varepsilon) = \min \{|X| : X \subseteq K, \ \text{$X$は$K$の$\varepsilon$-net} \}. \end{align}
+さて、$K$は任意の$\varepsilon$に対してその被覆数が有限であるときかつそのときに限りプレコンパクト（$K$の閉包がコンパクト）です。 解析学・集合と位相では、コンパクトであること（とそこから導かれる良い性質）だけを気にして、実際に何個の開集合で覆うことができるかということはあまり考えていなかった気がします。 具体的に個数を考えるところがなんとなく応用数学っぽいなと感じます（素人並の感想）。
+次に、同様にして充填数を定義します。 被覆数は覆うために必要な球の最小の個数でしたが、充填数は詰め込むことのできる半径$\varepsilon/2$の球の最大の個数です（後述しますが、これはちょっと嘘です）。 球の中心の集合を$\varepsilon$-separatedと言います。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://neonnnnn.github.io/posts/covering-packing/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-11-07T00:46:02+09:00">
+<meta property="article:modified_time" content="2021-11-07T00:46:02+09:00">
+<meta name=twitter:card content="summary">
+<meta name=twitter:title content="被覆数・充填数">
+<meta name=twitter:description content="はじめに 応用数学的な分野でしばしば用いられる道具として、Covering Number（被覆数）とPacking Number（充填数）と呼ばれるものがあります。 ちょっと嘘があるのですが、一言で表現すると、 距離空間上の集合に対して、被覆数は（ある指定された半径の）球を何個持ってこれば覆うことができるか、充填数は球を何個詰め込むことができるか、を表します。 前回の記事の0階の最適化アルゴリズムの解析のユークリッドノルムへの拡張が、充填数の簡単な応用例になっているなと思い、記憶の呼び起こしも含めて簡単にまとめてみることにしました。 思いの外長くなってしまったので（体感）、実際に応用してみるのは次回にして、今回は被覆数・充填数の導入にとどめます（記事数稼ぎ）。
+文献[1]が簡潔にまとめてくれているので、表記、ステートメントおよびその番号についてはそちらを参照して書くことにします（ところどころ簡略化しますが）。
+被覆数と充填数 前述の通り、距離空間上の集合と$\varepsilon>0$に対して、被覆数はその集合を覆うために必要な半径$\varepsilon$の球の個数です。 集合を球で覆っているときの、球の中心の集合を$\varepsilon$-netと呼びます。 フォーマルに定義すると以下のようになります。
+ 定義 4.2.1（$\varepsilon$-net） $(T, d)$を距離空間とする。 $T$の部分集合$K \subset T$とある正の実数$\varepsilon > 0$を考える。 $K$の部分集合$\mathcal{N} \subset K$は、$K$の各点が$\mathcal{N}$のある点と距離が$\varepsilon$以下であるとき、すなわち、 \begin{align} \forall x \in K\ \exists x_0 \in \mathcal{N}: \ d(x, x_0) \le \varepsilon \end{align} であるとき、$K$の$\varepsilon$-netであるという。 定義 4.2.2（被覆数） $K$の$\varepsilon$-netの最小の濃度を$K$の（$\varepsilon$）被覆数と呼び、$\mathcal{N}(K, d, \varepsilon)$と書く。  被覆数をもう少しフォーマルに書くと、以下のようになります： \begin{align} \mathcal{N}(K, d, \varepsilon) = \min \{|X| : X \subseteq K, \ \text{$X$は$K$の$\varepsilon$-net} \}. \end{align}
+さて、$K$は任意の$\varepsilon$に対してその被覆数が有限であるときかつそのときに限りプレコンパクト（$K$の閉包がコンパクト）です。 解析学・集合と位相では、コンパクトであること（とそこから導かれる良い性質）だけを気にして、実際に何個の開集合で覆うことができるかということはあまり考えていなかった気がします。 具体的に個数を考えるところがなんとなく応用数学っぽいなと感じます（素人並の感想）。
+次に、同様にして充填数を定義します。 被覆数は覆うために必要な球の最小の個数でしたが、充填数は詰め込むことのできる半径$\varepsilon/2$の球の最大の個数です（後述しますが、これはちょっと嘘です）。 球の中心の集合を$\varepsilon$-separatedと言います。">
+<link rel=stylesheet href=https://neonnnnn.github.io/css/styles.94f653e9e151e28067a7c5dbbc4600cbd5a3c721e79faaf971e523c40f3b249b8e4f20bb57810dfffa8d559ca5c140fd56eb4cd9c0853113ad08e66afdb08bdd.css integrity="sha512-lPZT6eFR4oBnp8XbvEYAy9WjxyHnn6r5ceUjxA87JJuOTyC7V4EN//qNVZylwUD9VutM2cCFMROtCOZq/bCL3Q=="><!--[if lt IE 9]><script src=https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js></script>
+<script src=https://oss.maxcdn.com/respond/1.4.2/respond.min.js></script><![endif]-->
+<link rel=icon type=image/png href=https://neonnnnn.github.io/images/favicon.ico>
+</head>
+<body class="max-width mx-auto px3 ltr">
+<div class="content index py4">
+<div id=header-post>
+<a id=menu-icon href=#><i class="fas fa-bars fa-lg"></i></a>
+<a id=menu-icon-tablet href=#><i class="fas fa-bars fa-lg"></i></a>
+<a id=top-icon-tablet href=# onclick="$('html, body').animate({scrollTop:0},'fast')" style=display:none aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+<span id=menu>
+<span id=nav>
+<ul>
+<li><a href=/>Home</a></li>
+<li><a href=/posts>Writings</a></li>
+<li><a href=/categories>Categories</a></li>
+<li><a href=/tags>Tags</a></li>
+<li><a href=/about>About</a></li>
+</ul>
+</span>
+<br>
+<span id=actions>
+<ul>
+<li>
+<a class=icon href=https://neonnnnn.github.io/posts/nesterov-book-lower-bound/ aria-label=Previous>
+<i class="fas fa-chevron-left" aria-hidden=true onmouseover="$('#i-prev').toggle()" onmouseout="$('#i-prev').toggle()"></i>
+</a>
+</li>
+<li>
+<a class=icon href=# onclick="$('html, body').animate({scrollTop:0},'fast')" aria-label="Top of Page">
+<i class="fas fa-chevron-up" aria-hidden=true onmouseover="$('#i-top').toggle()" onmouseout="$('#i-top').toggle()"></i>
+</a>
+</li>
+<li>
+<a class=icon href=# aria-label=Share>
+<i class="fas fa-share-alt" aria-hidden=true onmouseover="$('#i-share').toggle()" onmouseout="$('#i-share').toggle()" onclick="return $('#share').toggle(),!1"></i>
+</a>
+</li>
+</ul>
+<span id=i-prev class=info style=display:none>Previous post</span>
+<span id=i-next class=info style=display:none>Next post</span>
+<span id=i-top class=info style=display:none>Back to top</span>
+<span id=i-share class=info style=display:none>Share post</span>
+</span>
+<br>
+<div id=share style=display:none>
+<ul>
+<li>
+<a class=icon href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f" aria-label=Facebook>
+<i class="fab fa-facebook" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://twitter.com/share?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&text=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Twitter>
+<i class="fab fa-twitter" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Linkedin>
+<i class="fab fa-linkedin" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&is_video=false&description=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Pinterest>
+<i class="fab fa-pinterest" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="mailto:?subject=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0&body=Check out this article: https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f" aria-label=Email>
+<i class="fas fa-envelope" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://getpocket.com/save?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Pocket>
+<i class="fab fa-get-pocket" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://reddit.com/submit?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=reddit>
+<i class="fab fa-reddit" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.tumblr.com/share/link?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&name=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0&description=%e3%81%af%e3%81%98%e3%82%81%e3%81%ab%20%e5%bf%9c%e7%94%a8%e6%95%b0%e5%ad%a6%e7%9a%84%e3%81%aa%e5%88%86%e9%87%8e%e3%81%a7%e3%81%97%e3%81%b0%e3%81%97%e3%81%b0%e7%94%a8%e3%81%84%e3%82%89%e3%82%8c%e3%82%8b%e9%81%93%e5%85%b7%e3%81%a8%e3%81%97%e3%81%a6%e3%80%81Covering%20Number%ef%bc%88%e8%a2%ab%e8%a6%86%e6%95%b0%ef%bc%89%e3%81%a8Packing%20Number%ef%bc%88%e5%85%85%e5%a1%ab%e6%95%b0%ef%bc%89%e3%81%a8%e5%91%bc%e3%81%b0%e3%82%8c%e3%82%8b%e3%82%82%e3%81%ae%e3%81%8c%e3%81%82%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%20%e3%81%a1%e3%82%87%e3%81%a3%e3%81%a8%e5%98%98%e3%81%8c%e3%81%82%e3%82%8b%e3%81%ae%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e4%b8%80%e8%a8%80%e3%81%a7%e8%a1%a8%e7%8f%be%e3%81%99%e3%82%8b%e3%81%a8%e3%80%81%20%e8%b7%9d%e9%9b%a2%e7%a9%ba%e9%96%93%e4%b8%8a%e3%81%ae%e9%9b%86%e5%90%88%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%80%81%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%af%ef%bc%88%e3%81%82%e3%82%8b%e6%8c%87%e5%ae%9a%e3%81%95%e3%82%8c%e3%81%9f%e5%8d%8a%e5%be%84%e3%81%ae%ef%bc%89%e7%90%83%e3%82%92%e4%bd%95%e5%80%8b%e6%8c%81%e3%81%a3%e3%81%a6%e3%81%93%e3%82%8c%e3%81%b0%e8%a6%86%e3%81%86%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%8b%e3%80%81%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%af%e7%90%83%e3%82%92%e4%bd%95%e5%80%8b%e8%a9%b0%e3%82%81%e8%be%bc%e3%82%80%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%8b%e3%80%81%e3%82%92%e8%a1%a8%e3%81%97%e3%81%be%e3%81%99%e3%80%82%20%e5%89%8d%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%ae0%e9%9a%8e%e3%81%ae%e6%9c%80%e9%81%a9%e5%8c%96%e3%82%a2%e3%83%ab%e3%82%b4%e3%83%aa%e3%82%ba%e3%83%a0%e3%81%ae%e8%a7%a3%e6%9e%90%e3%81%ae%e3%83%a6%e3%83%bc%e3%82%af%e3%83%aa%e3%83%83%e3%83%89%e3%83%8e%e3%83%ab%e3%83%a0%e3%81%b8%e3%81%ae%e6%8b%a1%e5%bc%b5%e3%81%8c%e3%80%81%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8%e4%be%8b%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%84%e3%82%8b%e3%81%aa%e3%81%a8%e6%80%9d%e3%81%84%e3%80%81%e8%a8%98%e6%86%b6%e3%81%ae%e5%91%bc%e3%81%b3%e8%b5%b7%e3%81%93%e3%81%97%e3%82%82%e5%90%ab%e3%82%81%e3%81%a6%e7%b0%a1%e5%8d%98%e3%81%ab%e3%81%be%e3%81%a8%e3%82%81%e3%81%a6%e3%81%bf%e3%82%8b%e3%81%93%e3%81%a8%e3%81%ab%e3%81%97%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%20%e6%80%9d%e3%81%84%e3%81%ae%e5%a4%96%e9%95%b7%e3%81%8f%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%a3%e3%81%9f%e3%81%ae%e3%81%a7%ef%bc%88%e4%bd%93%e6%84%9f%ef%bc%89%e3%80%81%e5%ae%9f%e9%9a%9b%e3%81%ab%e5%bf%9c%e7%94%a8%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%e3%81%ae%e3%81%af%e6%ac%a1%e5%9b%9e%e3%81%ab%e3%81%97%e3%81%a6%e3%80%81%e4%bb%8a%e5%9b%9e%e3%81%af%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e5%b0%8e%e5%85%a5%e3%81%ab%e3%81%a8%e3%81%a9%e3%82%81%e3%81%be%e3%81%99%ef%bc%88%e8%a8%98%e4%ba%8b%e6%95%b0%e7%a8%bc%e3%81%8e%ef%bc%89%e3%80%82%0a%e6%96%87%e7%8c%ae%5b1%5d%e3%81%8c%e7%b0%a1%e6%bd%94%e3%81%ab%e3%81%be%e3%81%a8%e3%82%81%e3%81%a6%e3%81%8f%e3%82%8c%e3%81%a6%e3%81%84%e3%82%8b%e3%81%ae%e3%81%a7%e3%80%81%e8%a1%a8%e8%a8%98%e3%80%81%e3%82%b9%e3%83%86%e3%83%bc%e3%83%88%e3%83%a1%e3%83%b3%e3%83%88%e3%81%8a%e3%82%88%e3%81%b3%e3%81%9d%e3%81%ae%e7%95%aa%e5%8f%b7%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6%e3%81%af%e3%81%9d%e3%81%a1%e3%82%89%e3%82%92%e5%8f%82%e7%85%a7%e3%81%97%e3%81%a6%e6%9b%b8%e3%81%8f%e3%81%93%e3%81%a8%e3%81%ab%e3%81%97%e3%81%be%e3%81%99%ef%bc%88%e3%81%a8%e3%81%93%e3%82%8d%e3%81%a9%e3%81%93%e3%82%8d%e7%b0%a1%e7%95%a5%e5%8c%96%e3%81%97%e3%81%be%e3%81%99%e3%81%8c%ef%bc%89%e3%80%82%0a%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%20%e5%89%8d%e8%bf%b0%e3%81%ae%e9%80%9a%e3%82%8a%e3%80%81%e8%b7%9d%e9%9b%a2%e7%a9%ba%e9%96%93%e4%b8%8a%e3%81%ae%e9%9b%86%e5%90%88%e3%81%a8%24%5cvarepsilon%26gt%3b0%24%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%80%81%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%af%e3%81%9d%e3%81%ae%e9%9b%86%e5%90%88%e3%82%92%e8%a6%86%e3%81%86%e3%81%9f%e3%82%81%e3%81%ab%e5%bf%85%e8%a6%81%e3%81%aa%e5%8d%8a%e5%be%84%24%5cvarepsilon%24%e3%81%ae%e7%90%83%e3%81%ae%e5%80%8b%e6%95%b0%e3%81%a7%e3%81%99%e3%80%82%20%e9%9b%86%e5%90%88%e3%82%92%e7%90%83%e3%81%a7%e8%a6%86%e3%81%a3%e3%81%a6%e3%81%84%e3%82%8b%e3%81%a8%e3%81%8d%e3%81%ae%e3%80%81%e7%90%83%e3%81%ae%e4%b8%ad%e5%bf%83%e3%81%ae%e9%9b%86%e5%90%88%e3%82%92%24%5cvarepsilon%24-net%e3%81%a8%e5%91%bc%e3%81%b3%e3%81%be%e3%81%99%e3%80%82%20%e3%83%95%e3%82%a9%e3%83%bc%e3%83%9e%e3%83%ab%e3%81%ab%e5%ae%9a%e7%be%a9%e3%81%99%e3%82%8b%e3%81%a8%e4%bb%a5%e4%b8%8b%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%0a%20%e5%ae%9a%e7%be%a9%204.2.1%ef%bc%88%24%5cvarepsilon%24-net%ef%bc%89%20%24%28T%2c%20d%29%24%e3%82%92%e8%b7%9d%e9%9b%a2%e7%a9%ba%e9%96%93%e3%81%a8%e3%81%99%e3%82%8b%e3%80%82%20%24T%24%e3%81%ae%e9%83%a8%e5%88%86%e9%9b%86%e5%90%88%24K%20%5csubset%20T%24%e3%81%a8%e3%81%82%e3%82%8b%e6%ad%a3%e3%81%ae%e5%ae%9f%e6%95%b0%24%5cvarepsilon%20%26gt%3b%200%24%e3%82%92%e8%80%83%e3%81%88%e3%82%8b%e3%80%82%20%24K%24%e3%81%ae%e9%83%a8%e5%88%86%e9%9b%86%e5%90%88%24%5cmathcal%7bN%7d%20%5csubset%20K%24%e3%81%af%e3%80%81%24K%24%e3%81%ae%e5%90%84%e7%82%b9%e3%81%8c%24%5cmathcal%7bN%7d%24%e3%81%ae%e3%81%82%e3%82%8b%e7%82%b9%e3%81%a8%e8%b7%9d%e9%9b%a2%e3%81%8c%24%5cvarepsilon%24%e4%bb%a5%e4%b8%8b%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%8d%e3%80%81%e3%81%99%e3%81%aa%e3%82%8f%e3%81%a1%e3%80%81%20%5cbegin%7balign%7d%20%5cforall%20x%20%5cin%20K%5c%20%5cexists%20x_0%20%5cin%20%5cmathcal%7bN%7d%3a%20%5c%20d%28x%2c%20x_0%29%20%5cle%20%5cvarepsilon%20%5cend%7balign%7d%20%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%8d%e3%80%81%24K%24%e3%81%ae%24%5cvarepsilon%24-net%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%84%e3%81%86%e3%80%82%20%e5%ae%9a%e7%be%a9%204.2.2%ef%bc%88%e8%a2%ab%e8%a6%86%e6%95%b0%ef%bc%89%20%24K%24%e3%81%ae%24%5cvarepsilon%24-net%e3%81%ae%e6%9c%80%e5%b0%8f%e3%81%ae%e6%bf%83%e5%ba%a6%e3%82%92%24K%24%e3%81%ae%ef%bc%88%24%5cvarepsilon%24%ef%bc%89%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%91%bc%e3%81%b3%e3%80%81%24%5cmathcal%7bN%7d%28K%2c%20d%2c%20%5cvarepsilon%29%24%e3%81%a8%e6%9b%b8%e3%81%8f%e3%80%82%20%20%e8%a2%ab%e8%a6%86%e6%95%b0%e3%82%92%e3%82%82%e3%81%86%e5%b0%91%e3%81%97%e3%83%95%e3%82%a9%e3%83%bc%e3%83%9e%e3%83%ab%e3%81%ab%e6%9b%b8%e3%81%8f%e3%81%a8%e3%80%81%e4%bb%a5%e4%b8%8b%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%ef%bc%9a%20%5cbegin%7balign%7d%20%5cmathcal%7bN%7d%28K%2c%20d%2c%20%5cvarepsilon%29%20%3d%20%5cmin%20%5c%7b%7cX%7c%20%3a%20X%20%5csubseteq%20K%2c%20%5c%20%5ctext%7b%24X%24%e3%81%af%24K%24%e3%81%ae%24%5cvarepsilon%24-net%7d%20%5c%7d.%20%5cend%7balign%7d%0a%e3%81%95%e3%81%a6%e3%80%81%24K%24%e3%81%af%e4%bb%bb%e6%84%8f%e3%81%ae%24%5cvarepsilon%24%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%81%9d%e3%81%ae%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%8c%e6%9c%89%e9%99%90%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%8d%e3%81%8b%e3%81%a4%e3%81%9d%e3%81%ae%e3%81%a8%e3%81%8d%e3%81%ab%e9%99%90%e3%82%8a%e3%83%97%e3%83%ac%e3%82%b3%e3%83%b3%e3%83%91%e3%82%af%e3%83%88%ef%bc%88%24K%24%e3%81%ae%e9%96%89%e5%8c%85%e3%81%8c%e3%82%b3%e3%83%b3%e3%83%91%e3%82%af%e3%83%88%ef%bc%89%e3%81%a7%e3%81%99%e3%80%82%20%e8%a7%a3%e6%9e%90%e5%ad%a6%e3%83%bb%e9%9b%86%e5%90%88%e3%81%a8%e4%bd%8d%e7%9b%b8%e3%81%a7%e3%81%af%e3%80%81%e3%82%b3%e3%83%b3%e3%83%91%e3%82%af%e3%83%88%e3%81%a7%e3%81%82%e3%82%8b%e3%81%93%e3%81%a8%ef%bc%88%e3%81%a8%e3%81%9d%e3%81%93%e3%81%8b%e3%82%89%e5%b0%8e%e3%81%8b%e3%82%8c%e3%82%8b%e8%89%af%e3%81%84%e6%80%a7%e8%b3%aa%ef%bc%89%e3%81%a0%e3%81%91%e3%82%92%e6%b0%97%e3%81%ab%e3%81%97%e3%81%a6%e3%80%81%e5%ae%9f%e9%9a%9b%e3%81%ab%e4%bd%95%e5%80%8b%e3%81%ae%e9%96%8b%e9%9b%86%e5%90%88%e3%81%a7%e8%a6%86%e3%81%86%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%8b%e3%81%a8%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%af%e3%81%82%e3%81%be%e3%82%8a%e8%80%83%e3%81%88%e3%81%a6%e3%81%84%e3%81%aa%e3%81%8b%e3%81%a3%e3%81%9f%e6%b0%97%e3%81%8c%e3%81%97%e3%81%be%e3%81%99%e3%80%82%20%e5%85%b7%e4%bd%93%e7%9a%84%e3%81%ab%e5%80%8b%e6%95%b0%e3%82%92%e8%80%83%e3%81%88%e3%82%8b%e3%81%a8%e3%81%93%e3%82%8d%e3%81%8c%e3%81%aa%e3%82%93%e3%81%a8%e3%81%aa%e3%81%8f%e5%bf%9c%e7%94%a8%e6%95%b0%e5%ad%a6%e3%81%a3%e3%81%bd%e3%81%84%e3%81%aa%e3%81%a8%e6%84%9f%e3%81%98%e3%81%be%e3%81%99%ef%bc%88%e7%b4%a0%e4%ba%ba%e4%b8%a6%e3%81%ae%e6%84%9f%e6%83%b3%ef%bc%89%e3%80%82%0a%e6%ac%a1%e3%81%ab%e3%80%81%e5%90%8c%e6%a7%98%e3%81%ab%e3%81%97%e3%81%a6%e5%85%85%e5%a1%ab%e6%95%b0%e3%82%92%e5%ae%9a%e7%be%a9%e3%81%97%e3%81%be%e3%81%99%e3%80%82%20%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%af%e8%a6%86%e3%81%86%e3%81%9f%e3%82%81%e3%81%ab%e5%bf%85%e8%a6%81%e3%81%aa%e7%90%83%e3%81%ae%e6%9c%80%e5%b0%8f%e3%81%ae%e5%80%8b%e6%95%b0%e3%81%a7%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%af%e8%a9%b0%e3%82%81%e8%be%bc%e3%82%80%e3%81%93%e3%81%a8%e3%81%ae%e3%81%a7%e3%81%8d%e3%82%8b%e5%8d%8a%e5%be%84%24%5cvarepsilon%2f2%24%e3%81%ae%e7%90%83%e3%81%ae%e6%9c%80%e5%a4%a7%e3%81%ae%e5%80%8b%e6%95%b0%e3%81%a7%e3%81%99%ef%bc%88%e5%be%8c%e8%bf%b0%e3%81%97%e3%81%be%e3%81%99%e3%81%8c%e3%80%81%e3%81%93%e3%82%8c%e3%81%af%e3%81%a1%e3%82%87%e3%81%a3%e3%81%a8%e5%98%98%e3%81%a7%e3%81%99%ef%bc%89%e3%80%82%20%e7%90%83%e3%81%ae%e4%b8%ad%e5%bf%83%e3%81%ae%e9%9b%86%e5%90%88%e3%82%92%24%5cvarepsilon%24-separated%e3%81%a8%e8%a8%80%e3%81%84%e3%81%be%e3%81%99%e3%80%82" aria-label=Tumblr>
+<i class="fab fa-tumblr" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&t=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label="Hacker News">
+<i class="fab fa-hacker-news" aria-hidden=true></i>
+</a>
+</li>
+</ul>
+</div>
+<div id=toc>
+<nav id=TableOfContents>
+<ul>
+<li><a href=#はじめに>はじめに</a></li>
+<li><a href=#被覆数と充填数>被覆数と充填数</a></li>
+<li><a href=#被覆数と充填数の関係>被覆数と充填数の関係</a></li>
+<li><a href=#被覆数と体積>被覆数と体積</a></li>
+<li><a href=#被覆数充填数の上界下界の例>被覆数・充填数の上界・下界の例</a>
+<ul>
+<li><a href=#ユークリッド球>ユークリッド球</a></li>
+<li><a href=#ハミングキューブ>ハミングキューブ</a></li>
+</ul>
+</li>
+<li><a href=#充填数の説明に関する嘘>充填数の説明に関する嘘</a></li>
+<li><a href=#おわりに>おわりに</a></li>
+<li><a href=#参考文献>参考文献</a></li>
+</ul>
+</nav>
+</div>
+</span>
+</div>
+<article class=post itemscope itemtype=http://schema.org/BlogPosting>
+<header>
+<h1 class=posttitle itemprop="name headline">
+被覆数・充填数
+</h1>
+<div class=meta>
+<div class=postdate>
+<time datetime="2021-11-07 00:46:02 +0900 JST" itemprop=datePublished>2021-11-07</time>
+</div>
+<div class=article-read-time>
+<i class="far fa-clock"></i>
+31 minute read
+</div>
+<div class=article-category>
+<i class="fas fa-archive"></i>
+<a class=category-link href=/categories/%E5%BF%9C%E7%94%A8%E6%95%B0%E5%AD%A6>応用数学</a>
+</div>
+<div class=article-tag>
+<i class="fas fa-tag"></i>
+<a class=tag-link href=/tags/%E6%9C%80%E9%81%A9%E5%8C%96 rel=tag>最適化</a>
+,
+<a class=tag-link href=/tags/%E7%A2%BA%E7%8E%87 rel=tag>確率</a>
+,
+<a class=tag-link href=/tags/%E7%B5%B1%E8%A8%88 rel=tag>統計</a>
+,
+<a class=tag-link href=/tags/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92 rel=tag>機械学習</a>
+</div>
+</div>
+</header>
+<div class=content itemprop=articleBody>
+<h1 id=はじめに>はじめに</h1>
+<p>応用数学的な分野でしばしば用いられる道具として、<strong>Covering Number</strong>（<strong>被覆数</strong>）と<strong>Packing Number</strong>（<strong>充填数</strong>）と呼ばれるものがあります。
+ちょっと嘘があるのですが、一言で表現すると、 距離空間上の集合に対して、被覆数は（ある指定された半径の）球を何個持ってこれば覆うことができるか、充填数は球を何個詰め込むことができるか、を表します。
+<a href=/posts/nesterov-book-lower-bound/#0%E9%9A%8E%E3%81%AE%E6%9C%80%E9%81%A9%E5%8C%96%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0%E3%81%AE%E5%A0%B4%E5%90%88%E3%81%AE%E4%B8%8B%E7%95%8C>前回の記事の0階の最適化アルゴリズムの解析</a>のユークリッドノルムへの拡張が、充填数の簡単な応用例になっているなと思い、記憶の呼び起こしも含めて簡単にまとめてみることにしました。
+思いの外長くなってしまったので（体感）、実際に応用してみるのは次回にして、今回は被覆数・充填数の導入にとどめます（記事数稼ぎ）。</p>
+<p>文献[1]が簡潔にまとめてくれているので、表記、ステートメントおよびその番号についてはそちらを参照して書くことにします（ところどころ簡略化しますが）。</p>
+<h1 id=被覆数と充填数>被覆数と充填数</h1>
+<p>前述の通り、距離空間上の集合と$\varepsilon>0$に対して、被覆数はその集合を覆うために必要な半径$\varepsilon$の球の個数です。
+集合を球で覆っているときの、球の中心の集合を$\varepsilon$-netと呼びます。
+フォーマルに定義すると以下のようになります。</p>
+<dl>
+<dt>定義 4.2.1（$\varepsilon$-net）</dt>
+<dd>$(T, d)$を距離空間とする。
+$T$の部分集合$K \subset T$とある正の実数$\varepsilon > 0$を考える。
+$K$の部分集合$\mathcal{N} \subset K$は、$K$の各点が$\mathcal{N}$のある点と距離が$\varepsilon$以下であるとき、すなわち、
+\begin{align}
+\forall x \in K\ \exists x_0 \in \mathcal{N}: \ d(x, x_0) \le \varepsilon
+\end{align}
+であるとき、$K$の$\varepsilon$-netであるという。</dd>
+<dt>定義 4.2.2（被覆数）</dt>
+<dd>$K$の$\varepsilon$-netの最小の濃度を$K$の（$\varepsilon$）被覆数と呼び、$\mathcal{N}(K, d, \varepsilon)$と書く。</dd>
+</dl>
+<p>被覆数をもう少しフォーマルに書くと、以下のようになります：
+\begin{align}
+\mathcal{N}(K, d, \varepsilon) = \min \{|X| : X \subseteq K, \ \text{$X$は$K$の$\varepsilon$-net} \}.
+\end{align}</p>
+<p>さて、$K$は任意の$\varepsilon$に対してその被覆数が有限であるときかつそのときに限りプレコンパクト（$K$の閉包がコンパクト）です。
+解析学・集合と位相では、コンパクトであること（とそこから導かれる良い性質）だけを気にして、実際に何個の開集合で覆うことができるかということはあまり考えていなかった気がします。
+具体的に個数を考えるところがなんとなく応用数学っぽいなと感じます（素人並の感想）。</p>
+<p>次に、同様にして充填数を定義します。
+被覆数は覆うために必要な球の最小の個数でしたが、充填数は詰め込むことのできる半径$\varepsilon/2$の球の最大の個数です（後述しますが、これはちょっと嘘です）。
+球の中心の集合を$\varepsilon$-separatedと言います。</p>
+<dl>
+<dt>定義4.2.4（$\varepsilon$-separatedと充填数）</dt>
+<dd>距離空間$(T, d)$の部分集合$\mathcal{N}$は、すべての相異なる二点$x, y \in \mathcal{N}$について$d(x, y) > \varepsilon$であるとき、$\varepsilon$-separatedであるという。
+また、$T$の部分集合$K \subset T$の$\varepsilon$-separatedの最大の濃度を$K$の充填数といい、$\mathcal{P}(K, d, \varepsilon)$と書く。</dd>
+</dl>
+<p>ステートメントを素直に訳すならば、「互いに$\varepsilon$以上離れるように配置した点の集合」が$\varepsilon$-separatedで、被覆数はその最大濃度です。</p>
+<h1 id=被覆数と充填数の関係>被覆数と充填数の関係</h1>
+<p>被覆数と充填数には面白い関係があります。</p>
+<dl>
+<dt>補題4.2.6（separatedから作るnet）</dt>
+<dd>$\mathcal{N}$を最大の$\varepsilon$-separated（$\mathcal{N}$に新たな点を加えると、それがどのような点であっても、$\mathcal{N}$は$\varepsilon$-separatedでなくなる）であるする。
+このとき、$\mathcal{N}$は$\varepsilon$-netである。</dd>
+<dt>証明</dt>
+<dd>任意の$x \in K$について、ある$x_0 \in \mathcal{N}$が存在して、$d(x, x_0) \le \varepsilon$であることを示せば良い。
+$x \in \mathcal{N}$である場合は自明なので、そうでない場合を示す。
+$\mathcal{N}$は「最大」の$\varepsilon$-separatedなので、$\mathcal{N} \cup \{x\}$は$\varepsilon$-separatedでない。
+すなわち、ある$x_0 \in \mathcal{N}$が存在して、$d(x, x_0) \le \varepsilon$となり、まさしくこれが示したかった不等式である。</dd>
+</dl>
+<p>上の補題より、適当に$x_1 \in K$を選ぶ、$x_1$から$d(x_1, x_2) > \varepsilon$なる点を$x_2 \in K$を適当に選ぶ、$d(x_1, x_3)>\varepsilon$かつ$d(x_2, x_3)>\varepsilon$なる点$x_3 \in K$を選ぶ…という手順を、点を選ぶことができなくなるまで繰り返せば、$\varepsilon$-netを構成することができることがわかります（$K$が（プレ）コンパクトであれば、これは有限のステップで止まります）。</p>
+<p>被覆数は$\min$を使って定義され、充填数は$\max$を使って定義されています。
+そのため、被覆数を上から抑えることは簡単ですが、下から抑えるのは難しいです：適当な$\varepsilon$-netを作ればその濃度が$\mathcal{N}(K, d, \varepsilon)$の上界になりますが、$N$で下から抑えるためには$N$個の点をどのように配置しても$\varepsilon$-netにはならないことを示す必要があります。
+同様に、充填数を下から抑えることは簡単ですが（適当に$\varepsilon$-separatedを持ってこれば良い）、上から抑えることは難しいです。
+しかし、実は被覆数と充填数は等価です。
+すなわち、互いに互いの上下界になっています。</p>
+<dl>
+<dt>補題4.2.8（被覆数と充填数の等価性）</dt>
+<dd>任意の$T \subset K$と$\varepsilon >0$について、以下が成り立つ：
+\begin{align}
+\mathcal{P}(K, d, 2\varepsilon) \le \mathcal{N}(K, d, \varepsilon) \le \mathcal{P}(K, d, \varepsilon).
+\end{align}</dd>
+<dt>証明</dt>
+<dd>右の不等式は補題4.2.6より直ちにわかる。
+最大の$\varepsilon$-separatedを適当に持ってくると、補題4.2.6よりそれは$\varepsilon$-netになっている。その濃度を$N$とすると、被覆数と充填数の定義より、$\mathcal{N}(K, d, \varepsilon) \le N \le \mathcal{P}(K, d, \varepsilon)$より、右の不等式が得られる。</dd>
+<dd>
+<p>左の不等式について考える。
+$2\varepsilon$-separatedと$\varepsilon$-netを適当に選んで、それぞれ$\mathcal{P}$、$\mathcal{N}$とする。
+netの定義より、任意の$x \in \mathcal{P}$はある$y \in \mathcal{N}$を中心とする球に属する。
+さらに、任意の球は$2\varepsilon$より大きく離れた二点を含まない（三角不等式より明らか）。
+したがって、$\varepsilon$-netの各点$y \in \mathcal{N}$を中心とする球は、$2\varepsilon$-separatedである$\mathcal{P}$の点を最大で一つしか含まない。
+ゆえに、$|\mathcal{P}| \le |\mathcal{N}|$である（鳩の巣原理）。
+これは任意の充填$\mathcal{P}$と被覆$\mathcal{N}$について言えるので、$\mathcal{P}(K, d, 2\varepsilon) \le \mathcal{N}(K, d, \varepsilon) $である。</p>
+</dd>
+</dl>
+<h1 id=被覆数と体積>被覆数と体積</h1>
+<p>$T=\mathbb{R}^n$、$d(x, y) = \lVert x - y \rVert_2$とします。
+すなわち、$n$次元ユークリッド空間について考えます。
+被覆数は、直感的には$K \subset T$の複雑さ・大きさのようなものを表しているように思えます。
+そうなると、古典的な体積との関係が気になります。
+関係を示す前に、2つ記法を導入します。</p>
+<ol>
+<li>ミンコフスキー和：$A, B \subseteq \mathbb{R}^n$に対して、$A+B$はミンコフスキー和を表す：
+\begin{align}<br>
+A+B := \{a + b : a \in A, b \in B\}.
+\end{align}</li>
+<li>中心が$x_0 \in \mathbb{R}^n$で半径が$r >0 $の球を$B_2^n(x_0, r)$で表す：
+\begin{align}<br>
+B_2^n(x, r) := \{x_0 + x: \lVert x \rVert_2 \le r\}.
+\end{align}
+また、$x_0 = 0$、$r=1$のとき、単に$B_2^n$と書く。</li>
+</ol>
+<p>以下の命題が被覆数と体積の関係を示しています。</p>
+<dl>
+<dt>命題4.2.12（被覆数と体積）</dt>
+<dd>$K$を$\mathbb{R}^n$の（体積の測れる）部分集合とし、$\varepsilon >0$をとする。
+このとき、
+\begin{align}
+\frac{|K|}{|\varepsilon B_2^n|}\le \mathcal{N}(K, \varepsilon) \le \mathcal{P}(K, \varepsilon) \le \frac{|K + (\varepsilon/2)B_2^n|}{|(\varepsilon/2) B_2^n|},
+\end{align}
+ここで$|\cdot|: \mathbb{R}^n \to \mathbb{R}_{\ge 0}$は$\mathbb{R}^n$での体積を表す。</dd>
+<dt>証明</dt>
+<dd>真ん中の不等式は補題4.2.8によるものなので、左（下界）と右（上界）の不等式を示す。</dd>
+<dd>
+<p><strong>（下界）</strong> $N:=\mathcal{N}(K, \varepsilon)$とする。このとき、$K$は半径$\varepsilon$の球$N$個で覆われる。
+体積を比較すると、明らかに
+\begin{align}
+|K| \le N \cdot |\varepsilon B_2^n|
+\end{align}
+である。
+両辺を$|\varepsilon B_2^n|$で割ると左の不等式を得る。</p>
+</dd>
+<dd>
+<p><strong>（上界）</strong>
+$N:=\mathcal{P}(K, \varepsilon)$とする。
+このとき、半径が$\varepsilon/2$で、中心が$K$に属する、互いに素な$N$個の球が存在する。
+このとき、球は$K$から「はみ出る」可能性があるので、「詰め込んだ球の体積」$\le$「$K$の体積」、すなわち$\sum_{i=1}^N |B_2^n(x_i, \varepsilon/2)|= N \cdot |(\varepsilon/2)B_2^n| \le |K|$とはなりません（$\{x_i\}$は詰め込んだ球の中心（$\varepsilon$-separated））。
+しかし、$K$と球のミンコフスキー和については比較可能で、
+\begin{align}
+N \cdot |(\varepsilon/2)B_2^n| \le |K+(\varepsilon/2)B_2^n|
+\end{align}
+であり、両辺を$ |(\varepsilon/2)B_2^n|$で割ると右の不等式を得る。</p>
+</dd>
+</dl>
+<h1 id=被覆数充填数の上界下界の例>被覆数・充填数の上界・下界の例</h1>
+<p>先程の体積との議論をベースにして、いくつかの簡単な集合の被覆数・充填数の上界・下界を導出してみます。
+被覆数・充填数の上界・下界は、被覆数・充填数の応用において重要な役割を果たします。</p>
+<h2 id=ユークリッド球>ユークリッド球</h2>
+<dl>
+<dt>系4.2.13（ユークリッド球の被覆数）</dt>
+<dd>任意の$\varepsilon >0$について、$B_2^n$の被複数は以下を満たす：
+\begin{align}
+\left(\frac{1}{\varepsilon}\right)^n \le \mathcal{N}(B_2^n, \varepsilon) \le \left(\frac{2}{\varepsilon}+1\right)^n.
+\end{align}</dd>
+<dt>証明</dt>
+<dd>$|K|=|B_2^n|$であり、$|\varepsilon B_2^n|=\varepsilon^n |B_2^n|$である。
+ゆえに、下界は補題4.2.12よりしたがう。
+上界も同様に補題4.2.12から導出できる：
+\begin{align}
+\mathcal{N}(B_2^n, \varepsilon) \le \frac{|B_2^n + (\varepsilon/2)B_2^n|}{|(\varepsilon/2) B_2^n|} = \frac{|(1+\varepsilon/2)B_2^n|}{|(\varepsilon/2) B_2^n|} = \frac{(1+\varepsilon/2)^n}{(\varepsilon/2)^n} = \left(\frac{2}{\varepsilon}+1\right)^n
+\end{align}</dd>
+</dl>
+<p>系4.2.13より、ユークリッド球の被覆数は$n$に対して指数オーダーであることがわかります。</p>
+<h2 id=ハミングキューブ>ハミングキューブ</h2>
+<p>次に、バイナリ文字列の空間について考えます。</p>
+<dl>
+<dt>定義4.2.14（ハミングキューブ）</dt>
+<dd>長さ$n$のすべてのバイナリ文字列の集合$\{0, 1\}^n$をハミングキューブという。
+また、2つの異なるバイナリ文字列$x, y \in \{0, 1\}^n$について、異なるビットの個数
+\begin{align}
+d_H(x, y) := \# \{i: x(i) \neq y(i)\}
+\end{align}
+をハミング距離という。
+ハミングキューブはハミング距離の元で距離空間となる。
+$(\{0, 1\}^n, d_H)$をハミング空間という。</dd>
+</dl>
+<p>ハミングキューブの被覆数・充填数の上界・下界については、補題4.2.12と同様の方法で導出することができます。
+ただし、「体積」は「濃度」に置き換わります。</p>
+<dl>
+<dt>補題4.2.15（ハミングキューブの被覆数と充填数（[1]では練習問題4.2.15））</dt>
+<dd>$K=\{0, 1\}^n$とし、$\varepsilon >0$をとする。
+このとき、
+\begin{align}
+\frac{2^n}{\sum_{k=0}^m \binom{n}{k}} \le \mathcal{N}(K, d_H, \varepsilon) \le \mathcal{P}(K, d_H, \varepsilon) \le \frac{2^n}{\sum_{k=0}^{\lfloor m/2\rfloor} \binom{n}{k}}
+\end{align}
+が成り立つ。</dd>
+<dt>証明</dt>
+<dd>下界を示す。
+$\mathcal{N} = \{x_i \} _ {i=1} ^N$を$K$の（$d_H$の意味での）$m$-netとする。
+このとき、各$x_i$から定まる、半径$m$のハミング球を$B_H^n(x_i, m)$と書く：
+\begin{align}
+B_H^n(x_0, m) := \{x: x \in K, d_H(x_0, x) \le m\}.
+\end{align}
+任意の$x \in K$は、ある$x_i \in \mathcal{N}$が存在して、$x \in B_H^n(x_i, m)$であるから、
+\begin{align}
+|K| \le \sum_{i=1}^{N} |B_H^n(x_i, m)|
+\end{align}
+が成り立つ（ここでは$|\cdot|$は濃度を表す）。
+任意の$x_i$について、
+\begin{align}
+|B_H^n (x_i, m)| = \sum_{k=0}^m | \{x: x \in K, d_H(x_0, x) = k\}| \le \sum_{k=0}^m \binom{n}{k}
+\end{align}
+であるから、
+\begin{align}
+|K| =2^n \le N\sum_{k=0}^ m \binom{n}{k}
+\end{align}
+を得る。
+両辺を$\sum_{k=0}^m \binom{n}{k}$で割ると$2^n /\sum_{k=0}^m \binom{n}{k} \le N$であり、これは任意の$m$-netについて成立するので、下界を得る。</dd>
+<dd>
+<p>上界も同様にして導出ができる（ミンコフスキー和は考える必要がないことに注意）。</p>
+</dd>
+</dl>
+<h1 id=充填数の説明に関する嘘>充填数の説明に関する嘘</h1>
+<p>充填数に関する直感的な説明として、「詰め込むことのできる半径$\varepsilon/2$の球の最大の個数」という表現を用いました。
+$\varepsilon$-separatedの定義が「$\varepsilon$より大きく離れた点の集合」であり、充填数の定義が「$\varepsilon$-separatedの最大の濃度」であることから、直感的には正しそうに思えますが、実は正しくありません。
+例えば、離散距離
+\begin{align}
+d(x, y) = \begin{cases}
+1 & \text{if} \ x \neq y, \\\
+0 & \text{if} \ x = y
+\end{cases}
+\end{align}
+を考えると、$1&lt;\varepsilon&lt;2$のもとで反例となることがわかります。
+$1 &lt; \varepsilon &lt; 2$のとき、半径$1/2&lt;\varepsilon/2&lt;1$の球は1点集合なので、互いに素な半径$\varepsilon/2$の球の中心の集合で、濃度が最大のものは、$K$自身になります。
+しかし、任意の異なる2点の距離は$1$なので、$K$は$\varepsilon$-separatedではありません。</p>
+<p>しかし、幸い、ノルム空間においてはこの表現は正しくなります（距離は当然ノルムから誘導された距離とする）。</p>
+<ol>
+<li>
+<p>$\mathcal{P}$が$\varepsilon$-separatedならば、$\mathcal{P}$の各点を中心とした$\varepsilon/2$-ballは互いに素です。もし互いに素でないならば、$\mathcal{P}$のある2点を中心とする2の球に共通する点が存在し、そのような点を用いて三角不等式を適用すると2つの中心の距離が$\varepsilon$以下になり矛盾します（これは距離空間でも成立する）。</p>
+</li>
+<li>
+<p>$\mathcal{P}$の各点を中心とした$\varepsilon/2$-ballが互いに素であるならば、$\mathcal{P}$は$\varepsilon$-separatedです。ノルム空間である->線形空間であることから、任意の二点$x, y \in \mathcal{P}$の中点$z=(x+y)/2 \in T$であり、$\lVert x - z \rVert = \lVert y - z \rVert = \lVert x - y \rVert/2$です。2つの球が互いに素であることから、$\lVert x - y \rVert/2 > \varepsilon/2$、したがって$\mathcal{P}$は$\varepsilon$-separatedです。</p>
+</li>
+</ol>
+<h1 id=おわりに>おわりに</h1>
+<p>本記事では、被覆数と充填数の基本的な内容についてまとめました。
+被覆数と充填数は、距離空間上の集合に対して定義される値であり、被覆数は$\varepsilon$-netの最小の濃度、充填数は$\varepsilon$-separatedの最大の濃度です。
+直感的には、半径$\varepsilon$の球を何個持ってこれば集合を覆うことができるのか、半径$\varepsilon/2$の球を何個詰め込むことができるのか、を表します。
+また、被覆数と充填数は互いに上界下界になっており、等価です。
+ユークリッド球とハミングキューブに関して、被覆数の上界と下界を導出しました。
+上界・下界は体積・濃度によって表現されており、上界・下界からこれらの被覆数は次元$n$に対して指数的に増大する事がわかりました。</p>
+<p>次回の記事では、簡単な応用先として以下の3つ紹介する予定です：</p>
+<ol>
+<li>誤り訂正符号（[1]の4.3より）</li>
+<li>0階の最適化アルゴリズム</li>
+<li>ランダムフーリエ特徴[2]</li>
+</ol>
+<p>いずれも、誤差の評価に被覆数・充填数を用います。</p>
+<p>netとseparatedはそれぞれどう日本語訳をつけるのが適切なのかがちょっと気になります。
+後者は分離集合とか？
+今度もうちょっとちゃんと調べたい。</p>
+<h1 id=参考文献>参考文献</h1>
+<p>[1] R. Vershynin. High dimensional probability. An introduction with applications in Data Science. Cambridge University Press, 2018.</p>
+<p>[2] A. Rahimi and B. Recht. Random Features for Large-Scale Kernel Machines. In NeurIPS, pp. 1177&ndash;1184, 2007.</p>
+</div>
+</article>
+<div class=blog-post-comments>
+<div id=disquss_thread>
+<script src=https://utteranc.es/client.js repo=neonnnnn/neonnnnn.github.io issue-term=pathname label=Comment theme=github-light crossorigin=anonymous async></script>
+</div>
+</div>
+<div id=footer-post-container>
+<div id=footer-post>
+<div id=nav-footer style=display:none>
+<ul>
+<li><a href=/>Home</a></li>
+<li><a href=/posts>Writings</a></li>
+<li><a href=/categories>Categories</a></li>
+<li><a href=/tags>Tags</a></li>
+<li><a href=/about>About</a></li>
+</ul>
+</div>
+<div id=toc-footer style=display:none>
+<nav id=TableOfContents>
+<ul>
+<li><a href=#はじめに>はじめに</a></li>
+<li><a href=#被覆数と充填数>被覆数と充填数</a></li>
+<li><a href=#被覆数と充填数の関係>被覆数と充填数の関係</a></li>
+<li><a href=#被覆数と体積>被覆数と体積</a></li>
+<li><a href=#被覆数充填数の上界下界の例>被覆数・充填数の上界・下界の例</a>
+<ul>
+<li><a href=#ユークリッド球>ユークリッド球</a></li>
+<li><a href=#ハミングキューブ>ハミングキューブ</a></li>
+</ul>
+</li>
+<li><a href=#充填数の説明に関する嘘>充填数の説明に関する嘘</a></li>
+<li><a href=#おわりに>おわりに</a></li>
+<li><a href=#参考文献>参考文献</a></li>
+</ul>
+</nav>
+</div>
+<div id=share-footer style=display:none>
+<ul>
+<li>
+<a class=icon href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f" aria-label=Facebook>
+<i class="fab fa-facebook fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://twitter.com/share?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&text=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Twitter>
+<i class="fab fa-twitter fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Linkedin>
+<i class="fab fa-linkedin fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&is_video=false&description=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Pinterest>
+<i class="fab fa-pinterest fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="mailto:?subject=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0&body=Check out this article: https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f" aria-label=Email>
+<i class="fas fa-envelope fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://getpocket.com/save?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=Pocket>
+<i class="fab fa-get-pocket fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://reddit.com/submit?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label=reddit>
+<i class="fab fa-reddit fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.tumblr.com/share/link?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&name=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0&description=%e3%81%af%e3%81%98%e3%82%81%e3%81%ab%20%e5%bf%9c%e7%94%a8%e6%95%b0%e5%ad%a6%e7%9a%84%e3%81%aa%e5%88%86%e9%87%8e%e3%81%a7%e3%81%97%e3%81%b0%e3%81%97%e3%81%b0%e7%94%a8%e3%81%84%e3%82%89%e3%82%8c%e3%82%8b%e9%81%93%e5%85%b7%e3%81%a8%e3%81%97%e3%81%a6%e3%80%81Covering%20Number%ef%bc%88%e8%a2%ab%e8%a6%86%e6%95%b0%ef%bc%89%e3%81%a8Packing%20Number%ef%bc%88%e5%85%85%e5%a1%ab%e6%95%b0%ef%bc%89%e3%81%a8%e5%91%bc%e3%81%b0%e3%82%8c%e3%82%8b%e3%82%82%e3%81%ae%e3%81%8c%e3%81%82%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%20%e3%81%a1%e3%82%87%e3%81%a3%e3%81%a8%e5%98%98%e3%81%8c%e3%81%82%e3%82%8b%e3%81%ae%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e4%b8%80%e8%a8%80%e3%81%a7%e8%a1%a8%e7%8f%be%e3%81%99%e3%82%8b%e3%81%a8%e3%80%81%20%e8%b7%9d%e9%9b%a2%e7%a9%ba%e9%96%93%e4%b8%8a%e3%81%ae%e9%9b%86%e5%90%88%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%80%81%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%af%ef%bc%88%e3%81%82%e3%82%8b%e6%8c%87%e5%ae%9a%e3%81%95%e3%82%8c%e3%81%9f%e5%8d%8a%e5%be%84%e3%81%ae%ef%bc%89%e7%90%83%e3%82%92%e4%bd%95%e5%80%8b%e6%8c%81%e3%81%a3%e3%81%a6%e3%81%93%e3%82%8c%e3%81%b0%e8%a6%86%e3%81%86%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%8b%e3%80%81%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%af%e7%90%83%e3%82%92%e4%bd%95%e5%80%8b%e8%a9%b0%e3%82%81%e8%be%bc%e3%82%80%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%8b%e3%80%81%e3%82%92%e8%a1%a8%e3%81%97%e3%81%be%e3%81%99%e3%80%82%20%e5%89%8d%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%ae0%e9%9a%8e%e3%81%ae%e6%9c%80%e9%81%a9%e5%8c%96%e3%82%a2%e3%83%ab%e3%82%b4%e3%83%aa%e3%82%ba%e3%83%a0%e3%81%ae%e8%a7%a3%e6%9e%90%e3%81%ae%e3%83%a6%e3%83%bc%e3%82%af%e3%83%aa%e3%83%83%e3%83%89%e3%83%8e%e3%83%ab%e3%83%a0%e3%81%b8%e3%81%ae%e6%8b%a1%e5%bc%b5%e3%81%8c%e3%80%81%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8%e4%be%8b%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%84%e3%82%8b%e3%81%aa%e3%81%a8%e6%80%9d%e3%81%84%e3%80%81%e8%a8%98%e6%86%b6%e3%81%ae%e5%91%bc%e3%81%b3%e8%b5%b7%e3%81%93%e3%81%97%e3%82%82%e5%90%ab%e3%82%81%e3%81%a6%e7%b0%a1%e5%8d%98%e3%81%ab%e3%81%be%e3%81%a8%e3%82%81%e3%81%a6%e3%81%bf%e3%82%8b%e3%81%93%e3%81%a8%e3%81%ab%e3%81%97%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%20%e6%80%9d%e3%81%84%e3%81%ae%e5%a4%96%e9%95%b7%e3%81%8f%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%a3%e3%81%9f%e3%81%ae%e3%81%a7%ef%bc%88%e4%bd%93%e6%84%9f%ef%bc%89%e3%80%81%e5%ae%9f%e9%9a%9b%e3%81%ab%e5%bf%9c%e7%94%a8%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%e3%81%ae%e3%81%af%e6%ac%a1%e5%9b%9e%e3%81%ab%e3%81%97%e3%81%a6%e3%80%81%e4%bb%8a%e5%9b%9e%e3%81%af%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e5%b0%8e%e5%85%a5%e3%81%ab%e3%81%a8%e3%81%a9%e3%82%81%e3%81%be%e3%81%99%ef%bc%88%e8%a8%98%e4%ba%8b%e6%95%b0%e7%a8%bc%e3%81%8e%ef%bc%89%e3%80%82%0a%e6%96%87%e7%8c%ae%5b1%5d%e3%81%8c%e7%b0%a1%e6%bd%94%e3%81%ab%e3%81%be%e3%81%a8%e3%82%81%e3%81%a6%e3%81%8f%e3%82%8c%e3%81%a6%e3%81%84%e3%82%8b%e3%81%ae%e3%81%a7%e3%80%81%e8%a1%a8%e8%a8%98%e3%80%81%e3%82%b9%e3%83%86%e3%83%bc%e3%83%88%e3%83%a1%e3%83%b3%e3%83%88%e3%81%8a%e3%82%88%e3%81%b3%e3%81%9d%e3%81%ae%e7%95%aa%e5%8f%b7%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6%e3%81%af%e3%81%9d%e3%81%a1%e3%82%89%e3%82%92%e5%8f%82%e7%85%a7%e3%81%97%e3%81%a6%e6%9b%b8%e3%81%8f%e3%81%93%e3%81%a8%e3%81%ab%e3%81%97%e3%81%be%e3%81%99%ef%bc%88%e3%81%a8%e3%81%93%e3%82%8d%e3%81%a9%e3%81%93%e3%82%8d%e7%b0%a1%e7%95%a5%e5%8c%96%e3%81%97%e3%81%be%e3%81%99%e3%81%8c%ef%bc%89%e3%80%82%0a%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%20%e5%89%8d%e8%bf%b0%e3%81%ae%e9%80%9a%e3%82%8a%e3%80%81%e8%b7%9d%e9%9b%a2%e7%a9%ba%e9%96%93%e4%b8%8a%e3%81%ae%e9%9b%86%e5%90%88%e3%81%a8%24%5cvarepsilon%26gt%3b0%24%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%80%81%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%af%e3%81%9d%e3%81%ae%e9%9b%86%e5%90%88%e3%82%92%e8%a6%86%e3%81%86%e3%81%9f%e3%82%81%e3%81%ab%e5%bf%85%e8%a6%81%e3%81%aa%e5%8d%8a%e5%be%84%24%5cvarepsilon%24%e3%81%ae%e7%90%83%e3%81%ae%e5%80%8b%e6%95%b0%e3%81%a7%e3%81%99%e3%80%82%20%e9%9b%86%e5%90%88%e3%82%92%e7%90%83%e3%81%a7%e8%a6%86%e3%81%a3%e3%81%a6%e3%81%84%e3%82%8b%e3%81%a8%e3%81%8d%e3%81%ae%e3%80%81%e7%90%83%e3%81%ae%e4%b8%ad%e5%bf%83%e3%81%ae%e9%9b%86%e5%90%88%e3%82%92%24%5cvarepsilon%24-net%e3%81%a8%e5%91%bc%e3%81%b3%e3%81%be%e3%81%99%e3%80%82%20%e3%83%95%e3%82%a9%e3%83%bc%e3%83%9e%e3%83%ab%e3%81%ab%e5%ae%9a%e7%be%a9%e3%81%99%e3%82%8b%e3%81%a8%e4%bb%a5%e4%b8%8b%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%0a%20%e5%ae%9a%e7%be%a9%204.2.1%ef%bc%88%24%5cvarepsilon%24-net%ef%bc%89%20%24%28T%2c%20d%29%24%e3%82%92%e8%b7%9d%e9%9b%a2%e7%a9%ba%e9%96%93%e3%81%a8%e3%81%99%e3%82%8b%e3%80%82%20%24T%24%e3%81%ae%e9%83%a8%e5%88%86%e9%9b%86%e5%90%88%24K%20%5csubset%20T%24%e3%81%a8%e3%81%82%e3%82%8b%e6%ad%a3%e3%81%ae%e5%ae%9f%e6%95%b0%24%5cvarepsilon%20%26gt%3b%200%24%e3%82%92%e8%80%83%e3%81%88%e3%82%8b%e3%80%82%20%24K%24%e3%81%ae%e9%83%a8%e5%88%86%e9%9b%86%e5%90%88%24%5cmathcal%7bN%7d%20%5csubset%20K%24%e3%81%af%e3%80%81%24K%24%e3%81%ae%e5%90%84%e7%82%b9%e3%81%8c%24%5cmathcal%7bN%7d%24%e3%81%ae%e3%81%82%e3%82%8b%e7%82%b9%e3%81%a8%e8%b7%9d%e9%9b%a2%e3%81%8c%24%5cvarepsilon%24%e4%bb%a5%e4%b8%8b%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%8d%e3%80%81%e3%81%99%e3%81%aa%e3%82%8f%e3%81%a1%e3%80%81%20%5cbegin%7balign%7d%20%5cforall%20x%20%5cin%20K%5c%20%5cexists%20x_0%20%5cin%20%5cmathcal%7bN%7d%3a%20%5c%20d%28x%2c%20x_0%29%20%5cle%20%5cvarepsilon%20%5cend%7balign%7d%20%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%8d%e3%80%81%24K%24%e3%81%ae%24%5cvarepsilon%24-net%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%84%e3%81%86%e3%80%82%20%e5%ae%9a%e7%be%a9%204.2.2%ef%bc%88%e8%a2%ab%e8%a6%86%e6%95%b0%ef%bc%89%20%24K%24%e3%81%ae%24%5cvarepsilon%24-net%e3%81%ae%e6%9c%80%e5%b0%8f%e3%81%ae%e6%bf%83%e5%ba%a6%e3%82%92%24K%24%e3%81%ae%ef%bc%88%24%5cvarepsilon%24%ef%bc%89%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%91%bc%e3%81%b3%e3%80%81%24%5cmathcal%7bN%7d%28K%2c%20d%2c%20%5cvarepsilon%29%24%e3%81%a8%e6%9b%b8%e3%81%8f%e3%80%82%20%20%e8%a2%ab%e8%a6%86%e6%95%b0%e3%82%92%e3%82%82%e3%81%86%e5%b0%91%e3%81%97%e3%83%95%e3%82%a9%e3%83%bc%e3%83%9e%e3%83%ab%e3%81%ab%e6%9b%b8%e3%81%8f%e3%81%a8%e3%80%81%e4%bb%a5%e4%b8%8b%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%ef%bc%9a%20%5cbegin%7balign%7d%20%5cmathcal%7bN%7d%28K%2c%20d%2c%20%5cvarepsilon%29%20%3d%20%5cmin%20%5c%7b%7cX%7c%20%3a%20X%20%5csubseteq%20K%2c%20%5c%20%5ctext%7b%24X%24%e3%81%af%24K%24%e3%81%ae%24%5cvarepsilon%24-net%7d%20%5c%7d.%20%5cend%7balign%7d%0a%e3%81%95%e3%81%a6%e3%80%81%24K%24%e3%81%af%e4%bb%bb%e6%84%8f%e3%81%ae%24%5cvarepsilon%24%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%81%9d%e3%81%ae%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%8c%e6%9c%89%e9%99%90%e3%81%a7%e3%81%82%e3%82%8b%e3%81%a8%e3%81%8d%e3%81%8b%e3%81%a4%e3%81%9d%e3%81%ae%e3%81%a8%e3%81%8d%e3%81%ab%e9%99%90%e3%82%8a%e3%83%97%e3%83%ac%e3%82%b3%e3%83%b3%e3%83%91%e3%82%af%e3%83%88%ef%bc%88%24K%24%e3%81%ae%e9%96%89%e5%8c%85%e3%81%8c%e3%82%b3%e3%83%b3%e3%83%91%e3%82%af%e3%83%88%ef%bc%89%e3%81%a7%e3%81%99%e3%80%82%20%e8%a7%a3%e6%9e%90%e5%ad%a6%e3%83%bb%e9%9b%86%e5%90%88%e3%81%a8%e4%bd%8d%e7%9b%b8%e3%81%a7%e3%81%af%e3%80%81%e3%82%b3%e3%83%b3%e3%83%91%e3%82%af%e3%83%88%e3%81%a7%e3%81%82%e3%82%8b%e3%81%93%e3%81%a8%ef%bc%88%e3%81%a8%e3%81%9d%e3%81%93%e3%81%8b%e3%82%89%e5%b0%8e%e3%81%8b%e3%82%8c%e3%82%8b%e8%89%af%e3%81%84%e6%80%a7%e8%b3%aa%ef%bc%89%e3%81%a0%e3%81%91%e3%82%92%e6%b0%97%e3%81%ab%e3%81%97%e3%81%a6%e3%80%81%e5%ae%9f%e9%9a%9b%e3%81%ab%e4%bd%95%e5%80%8b%e3%81%ae%e9%96%8b%e9%9b%86%e5%90%88%e3%81%a7%e8%a6%86%e3%81%86%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%8b%e3%81%a8%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%af%e3%81%82%e3%81%be%e3%82%8a%e8%80%83%e3%81%88%e3%81%a6%e3%81%84%e3%81%aa%e3%81%8b%e3%81%a3%e3%81%9f%e6%b0%97%e3%81%8c%e3%81%97%e3%81%be%e3%81%99%e3%80%82%20%e5%85%b7%e4%bd%93%e7%9a%84%e3%81%ab%e5%80%8b%e6%95%b0%e3%82%92%e8%80%83%e3%81%88%e3%82%8b%e3%81%a8%e3%81%93%e3%82%8d%e3%81%8c%e3%81%aa%e3%82%93%e3%81%a8%e3%81%aa%e3%81%8f%e5%bf%9c%e7%94%a8%e6%95%b0%e5%ad%a6%e3%81%a3%e3%81%bd%e3%81%84%e3%81%aa%e3%81%a8%e6%84%9f%e3%81%98%e3%81%be%e3%81%99%ef%bc%88%e7%b4%a0%e4%ba%ba%e4%b8%a6%e3%81%ae%e6%84%9f%e6%83%b3%ef%bc%89%e3%80%82%0a%e6%ac%a1%e3%81%ab%e3%80%81%e5%90%8c%e6%a7%98%e3%81%ab%e3%81%97%e3%81%a6%e5%85%85%e5%a1%ab%e6%95%b0%e3%82%92%e5%ae%9a%e7%be%a9%e3%81%97%e3%81%be%e3%81%99%e3%80%82%20%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%af%e8%a6%86%e3%81%86%e3%81%9f%e3%82%81%e3%81%ab%e5%bf%85%e8%a6%81%e3%81%aa%e7%90%83%e3%81%ae%e6%9c%80%e5%b0%8f%e3%81%ae%e5%80%8b%e6%95%b0%e3%81%a7%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%af%e8%a9%b0%e3%82%81%e8%be%bc%e3%82%80%e3%81%93%e3%81%a8%e3%81%ae%e3%81%a7%e3%81%8d%e3%82%8b%e5%8d%8a%e5%be%84%24%5cvarepsilon%2f2%24%e3%81%ae%e7%90%83%e3%81%ae%e6%9c%80%e5%a4%a7%e3%81%ae%e5%80%8b%e6%95%b0%e3%81%a7%e3%81%99%ef%bc%88%e5%be%8c%e8%bf%b0%e3%81%97%e3%81%be%e3%81%99%e3%81%8c%e3%80%81%e3%81%93%e3%82%8c%e3%81%af%e3%81%a1%e3%82%87%e3%81%a3%e3%81%a8%e5%98%98%e3%81%a7%e3%81%99%ef%bc%89%e3%80%82%20%e7%90%83%e3%81%ae%e4%b8%ad%e5%bf%83%e3%81%ae%e9%9b%86%e5%90%88%e3%82%92%24%5cvarepsilon%24-separated%e3%81%a8%e8%a8%80%e3%81%84%e3%81%be%e3%81%99%e3%80%82" aria-label=Tumblr>
+<i class="fab fa-tumblr fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing%2f&t=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%83%bb%e5%85%85%e5%a1%ab%e6%95%b0" aria-label="Hacker News">
+<i class="fab fa-hacker-news fa-lg" aria-hidden=true></i>
+</a>
+</li>
+</ul>
+</div>
+<div id=actions-footer>
+<a id=menu-toggle class=icon href=# onclick="return $('#nav-footer').toggle(),!1" aria-label=Menu>
+<i class="fas fa-bars fa-lg" aria-hidden=true></i> Menu</a>
+<a id=toc-toggle class=icon href=# onclick="return $('#toc-footer').toggle(),!1" aria-label=TOC>
+<i class="fas fa-list fa-lg" aria-hidden=true></i> TOC</a>
+<a id=share-toggle class=icon href=# onclick="return $('#share-footer').toggle(),!1" aria-label=Share>
+<i class="fas fa-share-alt fa-lg" aria-hidden=true></i> share</a>
+<a id=top style=display:none class=icon href=# onclick="$('html, body').animate({scrollTop:0},'fast')" aria-label="Top of Page">
+<i class="fas fa-chevron-up fa-lg" aria-hidden=true></i> Top</a>
+</div>
+</div>
+</div>
+<footer id=footer>
+<div class=footer-left>
+Copyright &copy; 2021 Kyohei Atarashi
+</div>
+<div class=footer-right>
+<nav>
+<ul>
+<li><a href=/>Home</a></li>
+<li><a href=/posts>Writings</a></li>
+<li><a href=/categories>Categories</a></li>
+<li><a href=/tags>Tags</a></li>
+<li><a href=/about>About</a></li>
+</ul>
+</nav>
+</div>
+</footer>
+</div>
+</body>
+<link rel=stylesheet href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+<script src=/js/code-copy.js></script>
+<script>MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'global'}}</script>
+<script type=text/javascript id=MathJax-script async src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script>
+</html>
