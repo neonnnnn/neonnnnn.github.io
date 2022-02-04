@@ -25,6 +25,8 @@ Majority Decodingはシンプルでわかりやすいですが、直感的には
  補題4.3.4 正の数$k, r$に対して、$n$が \begin{align} \log \mathcal{P}(\{0, 1\}^n, d_H, 2r) \ge k \end{align} を満たすとする。このとき、$k$ビットの文字列を$n$ビットの文字列に符号化し、$r$個の誤りを訂正することのできる、誤り訂正符号が存在する。 証明 $\mathcal{N} \subseteq \{0, 1\}^n$を、$n$次元ハミングキューブ$(\{0, 1\}^n, d_H)$のある$2r$-separatedとする。 定義より、$\mathcal{N}$の各要素$x, y \in \mathcal{N}$はハミング距離が$2r$より大きい、すなわち、互いに$2r+1$個以上の文字が異なっている。したがって、$x \in \mathcal{N}$は、最大で$r$個の文字が変わり$x' \in \{0, 1\}^n$になったとしても、$\mathcal{N}$の中で最もハミング距離の近い要素は$x$のままである： \begin{align} x = \underset{y \in \mathcal{N}}{\mathrm{argmin}} \ d_{H}(y, x'), \ \forall x'\in \{0,1\}^n \ \text{s.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://neonnnnn.github.io/posts/covering-packing-easy-application/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2022-02-05T04:40:50+09:00">
+<meta property="article:modified_time" content="2022-02-05T04:40:50+09:00">
 <meta name=twitter:card content="summary">
 <meta name=twitter:title content="被覆数と充填数の簡単な応用">
 <meta name=twitter:description content="はじめに 前回の記事から悠久の時が経ってしまった……（一週間以内に更新する予定だったのですが、うっかりダンガンロンパに手を出してグダグダになってしまった）。前回の記事ではConvering Number（被覆数）とPacking Number（充填数）を紹介しました。今回の記事では被覆数と充填数の簡単な応用として、
@@ -59,8 +61,8 @@ Majority Decodingはシンプルでわかりやすいですが、直感的には
 <span id=actions>
 <ul>
 <li>
-<a class=icon href=https://neonnnnn.github.io/posts/code-block-test/ aria-label=Next>
-<i class="fas fa-chevron-right" aria-hidden=true onmouseover="$('#i-next').toggle()" onmouseout="$('#i-next').toggle()"></i>
+<a class=icon href=https://neonnnnn.github.io/posts/covering-packing/ aria-label=Previous>
+<i class="fas fa-chevron-left" aria-hidden=true onmouseover="$('#i-prev').toggle()" onmouseout="$('#i-prev').toggle()"></i>
 </a>
 </li>
 <li>
@@ -166,7 +168,7 @@ Majority Decodingはシンプルでわかりやすいですが、直感的には
 </h1>
 <div class=meta>
 <div class=postdate>
-<time datetime="0001-01-01 00:00:00 +0000 UTC" itemprop=datePublished>0001-01-01</time>
+<time datetime="2022-02-05 04:40:50 +0900 JST" itemprop=datePublished>2022-02-05</time>
 </div>
 <div class=article-read-time>
 <i class="far fa-clock"></i>
