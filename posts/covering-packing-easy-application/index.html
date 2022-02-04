@@ -1,0 +1,606 @@
+<!doctype html><html lang=ja-jp>
+<head>
+<link rel=preload href=/lib/font-awesome/webfonts/fa-brands-400.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<link rel=preload href=/lib/font-awesome/webfonts/fa-regular-400.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<link rel=preload href=/lib/font-awesome/webfonts/fa-solid-900.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<link rel=preload href=/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2 as=font type=font/woff2 crossorigin=anonymous>
+<script type=text/javascript src=https://latest.cactus.chat/cactus.js></script>
+<link rel=stylesheet href=https://latest.cactus.chat/style.css type=text/css>
+<meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge">
+<title> 被覆数と充填数の簡単な応用 | 積んでるゲームのサントラを聴く</title>
+<link rel=canonical href=https://neonnnnn.github.io/posts/covering-packing-easy-application/>
+<meta name=description content="勉強したことに関するメモ置き場です。自分の理解の向上・整理のためだけに運用されています。">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="all,follow">
+<meta name=googlebot content="index,follow,snippet,archive">
+<meta property="og:title" content="被覆数と充填数の簡単な応用">
+<meta property="og:description" content="はじめに 前回の記事から悠久の時が経ってしまった……（一週間以内に更新する予定だったのですが、うっかりダンガンロンパに手を出してグダグダになってしまった）。前回の記事ではConvering Number（被覆数）とPacking Number（充填数）を紹介しました。今回の記事では被覆数と充填数の簡単な応用として、
+ 誤り訂正符号（[1]の4.3より） 0階の最適化アルゴリズム ランダムフーリエ特徴[2]  の誤差の評価方法を紹介します。
+誤り訂正符号の誤差の評価 問題設定・問題意識 舞園さんは長さ$k$の文字列を苗木くんに送りたいです。このとき、攻撃者モノクマによって、送信したメッセージのうち最大で$r$個の文字が書き換えられてしまい、苗木くんは書き換えられたメッセージを受け取ります。例えば、舞園さんは「エスパーですから」という文字列を送るも（$k=8$）、モノクマの悪質なイタズラによって、苗木くんが受け取るメッセージは「アイドルですから」になってしまう、といったものです（$k=4$）。
+舞園さんはどのようにすれば正しいメッセージを苗木くんに送ることができるでしょうか？一般的な方法は冗長性をもたせることです。例えば、Majority (logic) Decodingという方法では、舞園さんは元のメッセージを$2r+1$回繰り返したメッセージを送り、苗木くんは繰り返されたメッセージに対して多数決を取ることによって正しい文字列を得ます。上の例にMajority Decodingを適用してみましょう。舞園さんは「エスパーですから」を$2r+1=9$回繰り返した「エスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですから」という文字列を送ります。そうすると、どのように$r=4$個の文字を変更しようとも、$9$個の（長さ$k=8$の）文字列の中で最も出現頻度が多いのは「エスパーですから」になり、苗木くんは正しいメッセージを受け取ることができます。
+Majority Decodingはシンプルでわかりやすいですが、直感的にはなんとも効率が悪そうに思えます。 もっと良い方法はないのでしょうか？
+誤り訂正符号と充填数の関係 上の例では日本語の文字列を考えましたが、ここでは0/1の二値の文字列を考えます。まず、誤り訂正符号の定義を以下に示します。
+ 定義4.3.3（誤り訂正符号） ある（固定された）正の整数$k, n, r$が与えられる。２つの写像 \begin{align} E: \{0, 1\}^k \to \{0, 1\}^n \quad \text{and} \quad E: \{0, 1\}^n \to \{0, 1\}^k \end{align} は、任意の$x \in \{0, 1\}^k$と、$E(x)$と最大で$r$個の文字が異なる任意の文字列$y$について、$D(y)=x$が成り立つとき、($r$個の誤りを訂正できる)符号写像、復号写像という。$E$を誤り訂正符号、$E$の像$E(\{0, 1\}^k)$を符号表（codebook）といい、符号表の各要素（すなわち、$E(x)$）を符号語という。  $k, n, r$はそれぞれ「送りたい文字列の長さ」「誤りを考慮して送る文字の長さ」「発生する最大の誤りの数」に対応します。$n$は小さければ小さいほど、効率の良い方法ということになります。前述のMajority decodingでは$n=k(2r+1)$でしたが、これよりも効率の良い方法が存在するのかが気になります。充填数を使うことで、より効率の良い方法が存在することを主張できます。
+ 補題4.3.4 正の数$k, r$に対して、$n$が \begin{align} \log \mathcal{P}(\{0, 1\}^n, d_H, 2r) \ge k \end{align} を満たすとする。このとき、$k$ビットの文字列を$n$ビットの文字列に符号化し、$r$個の誤りを訂正することのできる、誤り訂正符号が存在する。 証明 $\mathcal{N} \subseteq \{0, 1\}^n$を、$n$次元ハミングキューブ$(\{0, 1\}^n, d_H)$のある$2r$-separatedとする。 定義より、$\mathcal{N}$の各要素$x, y \in \mathcal{N}$はハミング距離が$2r$より大きい、すなわち、互いに$2r+1$個以上の文字が異なっている。したがって、$x \in \mathcal{N}$は、最大で$r$個の文字が変わり$x' \in \{0, 1\}^n$になったとしても、$\mathcal{N}$の中で最もハミング距離の近い要素は$x$のままである： \begin{align} x = \underset{y \in \mathcal{N}}{\mathrm{argmin}} \ d_{H}(y, x'), \ \forall x'\in \{0,1\}^n \ \text{s.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://neonnnnn.github.io/posts/covering-packing-easy-application/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-12-31T14:40:50+09:00">
+<meta property="article:modified_time" content="2021-12-31T14:40:50+09:00">
+<meta name=twitter:card content="summary">
+<meta name=twitter:title content="被覆数と充填数の簡単な応用">
+<meta name=twitter:description content="はじめに 前回の記事から悠久の時が経ってしまった……（一週間以内に更新する予定だったのですが、うっかりダンガンロンパに手を出してグダグダになってしまった）。前回の記事ではConvering Number（被覆数）とPacking Number（充填数）を紹介しました。今回の記事では被覆数と充填数の簡単な応用として、
+ 誤り訂正符号（[1]の4.3より） 0階の最適化アルゴリズム ランダムフーリエ特徴[2]  の誤差の評価方法を紹介します。
+誤り訂正符号の誤差の評価 問題設定・問題意識 舞園さんは長さ$k$の文字列を苗木くんに送りたいです。このとき、攻撃者モノクマによって、送信したメッセージのうち最大で$r$個の文字が書き換えられてしまい、苗木くんは書き換えられたメッセージを受け取ります。例えば、舞園さんは「エスパーですから」という文字列を送るも（$k=8$）、モノクマの悪質なイタズラによって、苗木くんが受け取るメッセージは「アイドルですから」になってしまう、といったものです（$k=4$）。
+舞園さんはどのようにすれば正しいメッセージを苗木くんに送ることができるでしょうか？一般的な方法は冗長性をもたせることです。例えば、Majority (logic) Decodingという方法では、舞園さんは元のメッセージを$2r+1$回繰り返したメッセージを送り、苗木くんは繰り返されたメッセージに対して多数決を取ることによって正しい文字列を得ます。上の例にMajority Decodingを適用してみましょう。舞園さんは「エスパーですから」を$2r+1=9$回繰り返した「エスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですから」という文字列を送ります。そうすると、どのように$r=4$個の文字を変更しようとも、$9$個の（長さ$k=8$の）文字列の中で最も出現頻度が多いのは「エスパーですから」になり、苗木くんは正しいメッセージを受け取ることができます。
+Majority Decodingはシンプルでわかりやすいですが、直感的にはなんとも効率が悪そうに思えます。 もっと良い方法はないのでしょうか？
+誤り訂正符号と充填数の関係 上の例では日本語の文字列を考えましたが、ここでは0/1の二値の文字列を考えます。まず、誤り訂正符号の定義を以下に示します。
+ 定義4.3.3（誤り訂正符号） ある（固定された）正の整数$k, n, r$が与えられる。２つの写像 \begin{align} E: \{0, 1\}^k \to \{0, 1\}^n \quad \text{and} \quad E: \{0, 1\}^n \to \{0, 1\}^k \end{align} は、任意の$x \in \{0, 1\}^k$と、$E(x)$と最大で$r$個の文字が異なる任意の文字列$y$について、$D(y)=x$が成り立つとき、($r$個の誤りを訂正できる)符号写像、復号写像という。$E$を誤り訂正符号、$E$の像$E(\{0, 1\}^k)$を符号表（codebook）といい、符号表の各要素（すなわち、$E(x)$）を符号語という。  $k, n, r$はそれぞれ「送りたい文字列の長さ」「誤りを考慮して送る文字の長さ」「発生する最大の誤りの数」に対応します。$n$は小さければ小さいほど、効率の良い方法ということになります。前述のMajority decodingでは$n=k(2r+1)$でしたが、これよりも効率の良い方法が存在するのかが気になります。充填数を使うことで、より効率の良い方法が存在することを主張できます。
+ 補題4.3.4 正の数$k, r$に対して、$n$が \begin{align} \log \mathcal{P}(\{0, 1\}^n, d_H, 2r) \ge k \end{align} を満たすとする。このとき、$k$ビットの文字列を$n$ビットの文字列に符号化し、$r$個の誤りを訂正することのできる、誤り訂正符号が存在する。 証明 $\mathcal{N} \subseteq \{0, 1\}^n$を、$n$次元ハミングキューブ$(\{0, 1\}^n, d_H)$のある$2r$-separatedとする。 定義より、$\mathcal{N}$の各要素$x, y \in \mathcal{N}$はハミング距離が$2r$より大きい、すなわち、互いに$2r+1$個以上の文字が異なっている。したがって、$x \in \mathcal{N}$は、最大で$r$個の文字が変わり$x' \in \{0, 1\}^n$になったとしても、$\mathcal{N}$の中で最もハミング距離の近い要素は$x$のままである： \begin{align} x = \underset{y \in \mathcal{N}}{\mathrm{argmin}} \ d_{H}(y, x'), \ \forall x'\in \{0,1\}^n \ \text{s.">
+<link rel=stylesheet href=https://neonnnnn.github.io/css/styles.94f653e9e151e28067a7c5dbbc4600cbd5a3c721e79faaf971e523c40f3b249b8e4f20bb57810dfffa8d559ca5c140fd56eb4cd9c0853113ad08e66afdb08bdd.css integrity="sha512-lPZT6eFR4oBnp8XbvEYAy9WjxyHnn6r5ceUjxA87JJuOTyC7V4EN//qNVZylwUD9VutM2cCFMROtCOZq/bCL3Q=="><!--[if lt IE 9]><script src=https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js></script>
+<script src=https://oss.maxcdn.com/respond/1.4.2/respond.min.js></script><![endif]-->
+<link rel=icon type=image/png href=https://neonnnnn.github.io/images/favicon.ico>
+</head>
+<body class="max-width mx-auto px3 ltr">
+<div class="content index py4">
+<div id=header-post>
+<a id=menu-icon href=#><i class="fas fa-bars fa-lg"></i></a>
+<a id=menu-icon-tablet href=#><i class="fas fa-bars fa-lg"></i></a>
+<a id=top-icon-tablet href=# onclick="$('html, body').animate({scrollTop:0},'fast')" style=display:none aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+<span id=menu>
+<span id=nav>
+<ul>
+<li><a href=/>Home</a></li>
+<li><a href=/posts>Writings</a></li>
+<li><a href=/categories>Categories</a></li>
+<li><a href=/tags>Tags</a></li>
+<li><a href=/about>About</a></li>
+</ul>
+</span>
+<br>
+<span id=actions>
+<ul>
+<li>
+<a class=icon href=https://neonnnnn.github.io/posts/covering-packing/ aria-label=Previous>
+<i class="fas fa-chevron-left" aria-hidden=true onmouseover="$('#i-prev').toggle()" onmouseout="$('#i-prev').toggle()"></i>
+</a>
+</li>
+<li>
+<a class=icon href=# onclick="$('html, body').animate({scrollTop:0},'fast')" aria-label="Top of Page">
+<i class="fas fa-chevron-up" aria-hidden=true onmouseover="$('#i-top').toggle()" onmouseout="$('#i-top').toggle()"></i>
+</a>
+</li>
+<li>
+<a class=icon href=# aria-label=Share>
+<i class="fas fa-share-alt" aria-hidden=true onmouseover="$('#i-share').toggle()" onmouseout="$('#i-share').toggle()" onclick="return $('#share').toggle(),!1"></i>
+</a>
+</li>
+</ul>
+<span id=i-prev class=info style=display:none>Previous post</span>
+<span id=i-next class=info style=display:none>Next post</span>
+<span id=i-top class=info style=display:none>Back to top</span>
+<span id=i-share class=info style=display:none>Share post</span>
+</span>
+<br>
+<div id=share style=display:none>
+<ul>
+<li>
+<a class=icon href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f" aria-label=Facebook>
+<i class="fab fa-facebook" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://twitter.com/share?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&text=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Twitter>
+<i class="fab fa-twitter" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Linkedin>
+<i class="fab fa-linkedin" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&is_video=false&description=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Pinterest>
+<i class="fab fa-pinterest" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="mailto:?subject=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8&body=Check out this article: https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f" aria-label=Email>
+<i class="fas fa-envelope" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://getpocket.com/save?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Pocket>
+<i class="fab fa-get-pocket" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://reddit.com/submit?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=reddit>
+<i class="fab fa-reddit" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.tumblr.com/share/link?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&name=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8&description=%e3%81%af%e3%81%98%e3%82%81%e3%81%ab%20%e5%89%8d%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%8b%e3%82%89%e6%82%a0%e4%b9%85%e3%81%ae%e6%99%82%e3%81%8c%e7%b5%8c%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%a3%e3%81%9f%e2%80%a6%e2%80%a6%ef%bc%88%e4%b8%80%e9%80%b1%e9%96%93%e4%bb%a5%e5%86%85%e3%81%ab%e6%9b%b4%e6%96%b0%e3%81%99%e3%82%8b%e4%ba%88%e5%ae%9a%e3%81%a0%e3%81%a3%e3%81%9f%e3%81%ae%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e3%81%86%e3%81%a3%e3%81%8b%e3%82%8a%e3%83%80%e3%83%b3%e3%82%ac%e3%83%b3%e3%83%ad%e3%83%b3%e3%83%91%e3%81%ab%e6%89%8b%e3%82%92%e5%87%ba%e3%81%97%e3%81%a6%e3%82%b0%e3%83%80%e3%82%b0%e3%83%80%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%a3%e3%81%9f%ef%bc%89%e3%80%82%e5%89%8d%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%a7%e3%81%afConvering%20Number%ef%bc%88%e8%a2%ab%e8%a6%86%e6%95%b0%ef%bc%89%e3%81%a8Packing%20Number%ef%bc%88%e5%85%85%e5%a1%ab%e6%95%b0%ef%bc%89%e3%82%92%e7%b4%b9%e4%bb%8b%e3%81%97%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%e4%bb%8a%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%a7%e3%81%af%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8%e3%81%a8%e3%81%97%e3%81%a6%e3%80%81%0a%20%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%ef%bc%88%5b1%5d%e3%81%ae4.3%e3%82%88%e3%82%8a%ef%bc%89%200%e9%9a%8e%e3%81%ae%e6%9c%80%e9%81%a9%e5%8c%96%e3%82%a2%e3%83%ab%e3%82%b4%e3%83%aa%e3%82%ba%e3%83%a0%20%e3%83%a9%e3%83%b3%e3%83%80%e3%83%a0%e3%83%95%e3%83%bc%e3%83%aa%e3%82%a8%e7%89%b9%e5%be%b4%5b2%5d%20%20%e3%81%ae%e8%aa%a4%e5%b7%ae%e3%81%ae%e8%a9%95%e4%be%a1%e6%96%b9%e6%b3%95%e3%82%92%e7%b4%b9%e4%bb%8b%e3%81%97%e3%81%be%e3%81%99%e3%80%82%0a%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%ae%e8%aa%a4%e5%b7%ae%e3%81%ae%e8%a9%95%e4%be%a1%20%e5%95%8f%e9%a1%8c%e8%a8%ad%e5%ae%9a%e3%83%bb%e5%95%8f%e9%a1%8c%e6%84%8f%e8%ad%98%20%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e9%95%b7%e3%81%95%24k%24%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%ab%e9%80%81%e3%82%8a%e3%81%9f%e3%81%84%e3%81%a7%e3%81%99%e3%80%82%e3%81%93%e3%81%ae%e3%81%a8%e3%81%8d%e3%80%81%e6%94%bb%e6%92%83%e8%80%85%e3%83%a2%e3%83%8e%e3%82%af%e3%83%9e%e3%81%ab%e3%82%88%e3%81%a3%e3%81%a6%e3%80%81%e9%80%81%e4%bf%a1%e3%81%97%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%81%ae%e3%81%86%e3%81%a1%e6%9c%80%e5%a4%a7%e3%81%a7%24r%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e6%9b%b8%e3%81%8d%e6%8f%9b%e3%81%88%e3%82%89%e3%82%8c%e3%81%a6%e3%81%97%e3%81%be%e3%81%84%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%af%e6%9b%b8%e3%81%8d%e6%8f%9b%e3%81%88%e3%82%89%e3%82%8c%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e5%8f%97%e3%81%91%e5%8f%96%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e4%be%8b%e3%81%88%e3%81%b0%e3%80%81%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%a8%e3%81%84%e3%81%86%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e9%80%81%e3%82%8b%e3%82%82%ef%bc%88%24k%3d8%24%ef%bc%89%e3%80%81%e3%83%a2%e3%83%8e%e3%82%af%e3%83%9e%e3%81%ae%e6%82%aa%e8%b3%aa%e3%81%aa%e3%82%a4%e3%82%bf%e3%82%ba%e3%83%a9%e3%81%ab%e3%82%88%e3%81%a3%e3%81%a6%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%8c%e5%8f%97%e3%81%91%e5%8f%96%e3%82%8b%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%81%af%e3%80%8c%e3%82%a2%e3%82%a4%e3%83%89%e3%83%ab%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%86%e3%80%81%e3%81%a8%e3%81%84%e3%81%a3%e3%81%9f%e3%82%82%e3%81%ae%e3%81%a7%e3%81%99%ef%bc%88%24k%3d4%24%ef%bc%89%e3%80%82%0a%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e3%81%a9%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%e3%81%99%e3%82%8c%e3%81%b0%e6%ad%a3%e3%81%97%e3%81%84%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%ab%e9%80%81%e3%82%8b%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%a7%e3%81%97%e3%82%87%e3%81%86%e3%81%8b%ef%bc%9f%e4%b8%80%e8%88%ac%e7%9a%84%e3%81%aa%e6%96%b9%e6%b3%95%e3%81%af%e5%86%97%e9%95%b7%e6%80%a7%e3%82%92%e3%82%82%e3%81%9f%e3%81%9b%e3%82%8b%e3%81%93%e3%81%a8%e3%81%a7%e3%81%99%e3%80%82%e4%be%8b%e3%81%88%e3%81%b0%e3%80%81Majority%20%28logic%29%20Decoding%e3%81%a8%e3%81%84%e3%81%86%e6%96%b9%e6%b3%95%e3%81%a7%e3%81%af%e3%80%81%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e5%85%83%e3%81%ae%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%242r%2b1%24%e5%9b%9e%e7%b9%b0%e3%82%8a%e8%bf%94%e3%81%97%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e9%80%81%e3%82%8a%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%af%e7%b9%b0%e3%82%8a%e8%bf%94%e3%81%95%e3%82%8c%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e5%a4%9a%e6%95%b0%e6%b1%ba%e3%82%92%e5%8f%96%e3%82%8b%e3%81%93%e3%81%a8%e3%81%ab%e3%82%88%e3%81%a3%e3%81%a6%e6%ad%a3%e3%81%97%e3%81%84%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e5%be%97%e3%81%be%e3%81%99%e3%80%82%e4%b8%8a%e3%81%ae%e4%be%8b%e3%81%abMajority%20Decoding%e3%82%92%e9%81%a9%e7%94%a8%e3%81%97%e3%81%a6%e3%81%bf%e3%81%be%e3%81%97%e3%82%87%e3%81%86%e3%80%82%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%82%92%242r%2b1%3d9%24%e5%9b%9e%e7%b9%b0%e3%82%8a%e8%bf%94%e3%81%97%e3%81%9f%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%a8%e3%81%84%e3%81%86%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e9%80%81%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e3%81%9d%e3%81%86%e3%81%99%e3%82%8b%e3%81%a8%e3%80%81%e3%81%a9%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%24r%3d4%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%82%92%e5%a4%89%e6%9b%b4%e3%81%97%e3%82%88%e3%81%86%e3%81%a8%e3%82%82%e3%80%81%249%24%e5%80%8b%e3%81%ae%ef%bc%88%e9%95%b7%e3%81%95%24k%3d8%24%e3%81%ae%ef%bc%89%e6%96%87%e5%ad%97%e5%88%97%e3%81%ae%e4%b8%ad%e3%81%a7%e6%9c%80%e3%82%82%e5%87%ba%e7%8f%be%e9%a0%bb%e5%ba%a6%e3%81%8c%e5%a4%9a%e3%81%84%e3%81%ae%e3%81%af%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%ab%e3%81%aa%e3%82%8a%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%af%e6%ad%a3%e3%81%97%e3%81%84%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e5%8f%97%e3%81%91%e5%8f%96%e3%82%8b%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0aMajority%20Decoding%e3%81%af%e3%82%b7%e3%83%b3%e3%83%97%e3%83%ab%e3%81%a7%e3%82%8f%e3%81%8b%e3%82%8a%e3%82%84%e3%81%99%e3%81%84%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e7%9b%b4%e6%84%9f%e7%9a%84%e3%81%ab%e3%81%af%e3%81%aa%e3%82%93%e3%81%a8%e3%82%82%e5%8a%b9%e7%8e%87%e3%81%8c%e6%82%aa%e3%81%9d%e3%81%86%e3%81%ab%e6%80%9d%e3%81%88%e3%81%be%e3%81%99%e3%80%82%20%e3%82%82%e3%81%a3%e3%81%a8%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%af%e3%81%aa%e3%81%84%e3%81%ae%e3%81%a7%e3%81%97%e3%82%87%e3%81%86%e3%81%8b%ef%bc%9f%0a%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e9%96%a2%e4%bf%82%20%e4%b8%8a%e3%81%ae%e4%be%8b%e3%81%a7%e3%81%af%e6%97%a5%e6%9c%ac%e8%aa%9e%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e3%81%93%e3%81%93%e3%81%a7%e3%81%af0%2f1%e3%81%ae%e4%ba%8c%e5%80%a4%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%99%e3%80%82%e3%81%be%e3%81%9a%e3%80%81%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%ae%e5%ae%9a%e7%be%a9%e3%82%92%e4%bb%a5%e4%b8%8b%e3%81%ab%e7%a4%ba%e3%81%97%e3%81%be%e3%81%99%e3%80%82%0a%20%e5%ae%9a%e7%be%a94.3.3%ef%bc%88%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%ef%bc%89%20%e3%81%82%e3%82%8b%ef%bc%88%e5%9b%ba%e5%ae%9a%e3%81%95%e3%82%8c%e3%81%9f%ef%bc%89%e6%ad%a3%e3%81%ae%e6%95%b4%e6%95%b0%24k%2c%20n%2c%20r%24%e3%81%8c%e4%b8%8e%e3%81%88%e3%82%89%e3%82%8c%e3%82%8b%e3%80%82%ef%bc%92%e3%81%a4%e3%81%ae%e5%86%99%e5%83%8f%20%5cbegin%7balign%7d%20E%3a%20%5c%7b0%2c%201%5c%7d%5ek%20%5cto%20%5c%7b0%2c%201%5c%7d%5en%20%5cquad%20%5ctext%7band%7d%20%5cquad%20E%3a%20%5c%7b0%2c%201%5c%7d%5en%20%5cto%20%5c%7b0%2c%201%5c%7d%5ek%20%5cend%7balign%7d%20%e3%81%af%e3%80%81%e4%bb%bb%e6%84%8f%e3%81%ae%24x%20%5cin%20%5c%7b0%2c%201%5c%7d%5ek%24%e3%81%a8%e3%80%81%24E%28x%29%24%e3%81%a8%e6%9c%80%e5%a4%a7%e3%81%a7%24r%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e7%95%b0%e3%81%aa%e3%82%8b%e4%bb%bb%e6%84%8f%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%24y%24%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6%e3%80%81%24D%28y%29%3dx%24%e3%81%8c%e6%88%90%e3%82%8a%e7%ab%8b%e3%81%a4%e3%81%a8%e3%81%8d%e3%80%81%28%24r%24%e5%80%8b%e3%81%ae%e8%aa%a4%e3%82%8a%e3%82%92%e8%a8%82%e6%ad%a3%e3%81%a7%e3%81%8d%e3%82%8b%29%e7%ac%a6%e5%8f%b7%e5%86%99%e5%83%8f%e3%80%81%e5%be%a9%e5%8f%b7%e5%86%99%e5%83%8f%e3%81%a8%e3%81%84%e3%81%86%e3%80%82%24E%24%e3%82%92%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%80%81%24E%24%e3%81%ae%e5%83%8f%24E%28%5c%7b0%2c%201%5c%7d%5ek%29%24%e3%82%92%e7%ac%a6%e5%8f%b7%e8%a1%a8%ef%bc%88codebook%ef%bc%89%e3%81%a8%e3%81%84%e3%81%84%e3%80%81%e7%ac%a6%e5%8f%b7%e8%a1%a8%e3%81%ae%e5%90%84%e8%a6%81%e7%b4%a0%ef%bc%88%e3%81%99%e3%81%aa%e3%82%8f%e3%81%a1%e3%80%81%24E%28x%29%24%ef%bc%89%e3%82%92%e7%ac%a6%e5%8f%b7%e8%aa%9e%e3%81%a8%e3%81%84%e3%81%86%e3%80%82%20%20%24k%2c%20n%2c%20r%24%e3%81%af%e3%81%9d%e3%82%8c%e3%81%9e%e3%82%8c%e3%80%8c%e9%80%81%e3%82%8a%e3%81%9f%e3%81%84%e6%96%87%e5%ad%97%e5%88%97%e3%81%ae%e9%95%b7%e3%81%95%e3%80%8d%e3%80%8c%e8%aa%a4%e3%82%8a%e3%82%92%e8%80%83%e6%85%ae%e3%81%97%e3%81%a6%e9%80%81%e3%82%8b%e6%96%87%e5%ad%97%e3%81%ae%e9%95%b7%e3%81%95%e3%80%8d%e3%80%8c%e7%99%ba%e7%94%9f%e3%81%99%e3%82%8b%e6%9c%80%e5%a4%a7%e3%81%ae%e8%aa%a4%e3%82%8a%e3%81%ae%e6%95%b0%e3%80%8d%e3%81%ab%e5%af%be%e5%bf%9c%e3%81%97%e3%81%be%e3%81%99%e3%80%82%24n%24%e3%81%af%e5%b0%8f%e3%81%95%e3%81%91%e3%82%8c%e3%81%b0%e5%b0%8f%e3%81%95%e3%81%84%e3%81%bb%e3%81%a9%e3%80%81%e5%8a%b9%e7%8e%87%e3%81%ae%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%a8%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e5%89%8d%e8%bf%b0%e3%81%aeMajority%20decoding%e3%81%a7%e3%81%af%24n%3dk%282r%2b1%29%24%e3%81%a7%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e3%81%93%e3%82%8c%e3%82%88%e3%82%8a%e3%82%82%e5%8a%b9%e7%8e%87%e3%81%ae%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%8c%e5%ad%98%e5%9c%a8%e3%81%99%e3%82%8b%e3%81%ae%e3%81%8b%e3%81%8c%e6%b0%97%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e5%85%85%e5%a1%ab%e6%95%b0%e3%82%92%e4%bd%bf%e3%81%86%e3%81%93%e3%81%a8%e3%81%a7%e3%80%81%e3%82%88%e3%82%8a%e5%8a%b9%e7%8e%87%e3%81%ae%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%8c%e5%ad%98%e5%9c%a8%e3%81%99%e3%82%8b%e3%81%93%e3%81%a8%e3%82%92%e4%b8%bb%e5%bc%b5%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0a%20%e8%a3%9c%e9%a1%8c4.3.4%20%e6%ad%a3%e3%81%ae%e6%95%b0%24k%2c%20r%24%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%80%81%24n%24%e3%81%8c%20%5cbegin%7balign%7d%20%5clog%20%5cmathcal%7bP%7d%28%5c%7b0%2c%201%5c%7d%5en%2c%20d_H%2c%202r%29%20%5cge%20k%20%5cend%7balign%7d%20%e3%82%92%e6%ba%80%e3%81%9f%e3%81%99%e3%81%a8%e3%81%99%e3%82%8b%e3%80%82%e3%81%93%e3%81%ae%e3%81%a8%e3%81%8d%e3%80%81%24k%24%e3%83%93%e3%83%83%e3%83%88%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%24n%24%e3%83%93%e3%83%83%e3%83%88%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%81%ab%e7%ac%a6%e5%8f%b7%e5%8c%96%e3%81%97%e3%80%81%24r%24%e5%80%8b%e3%81%ae%e8%aa%a4%e3%82%8a%e3%82%92%e8%a8%82%e6%ad%a3%e3%81%99%e3%82%8b%e3%81%93%e3%81%a8%e3%81%ae%e3%81%a7%e3%81%8d%e3%82%8b%e3%80%81%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%8c%e5%ad%98%e5%9c%a8%e3%81%99%e3%82%8b%e3%80%82%20%e8%a8%bc%e6%98%8e%20%24%5cmathcal%7bN%7d%20%5csubseteq%20%5c%7b0%2c%201%5c%7d%5en%24%e3%82%92%e3%80%81%24n%24%e6%ac%a1%e5%85%83%e3%83%8f%e3%83%9f%e3%83%b3%e3%82%b0%e3%82%ad%e3%83%a5%e3%83%bc%e3%83%96%24%28%5c%7b0%2c%201%5c%7d%5en%2c%20d_H%29%24%e3%81%ae%e3%81%82%e3%82%8b%242r%24-separated%e3%81%a8%e3%81%99%e3%82%8b%e3%80%82%20%e5%ae%9a%e7%be%a9%e3%82%88%e3%82%8a%e3%80%81%24%5cmathcal%7bN%7d%24%e3%81%ae%e5%90%84%e8%a6%81%e7%b4%a0%24x%2c%20y%20%5cin%20%5cmathcal%7bN%7d%24%e3%81%af%e3%83%8f%e3%83%9f%e3%83%b3%e3%82%b0%e8%b7%9d%e9%9b%a2%e3%81%8c%242r%24%e3%82%88%e3%82%8a%e5%a4%a7%e3%81%8d%e3%81%84%e3%80%81%e3%81%99%e3%81%aa%e3%82%8f%e3%81%a1%e3%80%81%e4%ba%92%e3%81%84%e3%81%ab%242r%2b1%24%e5%80%8b%e4%bb%a5%e4%b8%8a%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e7%95%b0%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%84%e3%82%8b%e3%80%82%e3%81%97%e3%81%9f%e3%81%8c%e3%81%a3%e3%81%a6%e3%80%81%24x%20%5cin%20%5cmathcal%7bN%7d%24%e3%81%af%e3%80%81%e6%9c%80%e5%a4%a7%e3%81%a7%24r%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e5%a4%89%e3%82%8f%e3%82%8a%24x%27%20%5cin%20%5c%7b0%2c%201%5c%7d%5en%24%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%9f%e3%81%a8%e3%81%97%e3%81%a6%e3%82%82%e3%80%81%24%5cmathcal%7bN%7d%24%e3%81%ae%e4%b8%ad%e3%81%a7%e6%9c%80%e3%82%82%e3%83%8f%e3%83%9f%e3%83%b3%e3%82%b0%e8%b7%9d%e9%9b%a2%e3%81%ae%e8%bf%91%e3%81%84%e8%a6%81%e7%b4%a0%e3%81%af%24x%24%e3%81%ae%e3%81%be%e3%81%be%e3%81%a7%e3%81%82%e3%82%8b%ef%bc%9a%20%5cbegin%7balign%7d%20x%20%3d%20%5cunderset%7by%20%5cin%20%5cmathcal%7bN%7d%7d%7b%5cmathrm%7bargmin%7d%7d%20%5c%20d_%7bH%7d%28y%2c%20x%27%29%2c%20%5c%20%5cforall%20x%27%5cin%20%5c%7b0%2c1%5c%7d%5en%20%5c%20%5ctext%7bs." aria-label=Tumblr>
+<i class="fab fa-tumblr" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&t=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label="Hacker News">
+<i class="fab fa-hacker-news" aria-hidden=true></i>
+</a>
+</li>
+</ul>
+</div>
+<div id=toc>
+<nav id=TableOfContents>
+<ul>
+<li><a href=#はじめに>はじめに</a></li>
+<li><a href=#誤り訂正符号の誤差の評価>誤り訂正符号の誤差の評価</a>
+<ul>
+<li><a href=#問題設定問題意識>問題設定・問題意識</a></li>
+<li><a href=#誤り訂正符号と充填数の関係>誤り訂正符号と充填数の関係</a></li>
+</ul>
+</li>
+<li><a href=#0階の最適化アルゴリズムの誤差の評価>0階の最適化アルゴリズムの誤差の評価</a>
+<ul>
+<li><a href=#問題設定>問題設定</a></li>
+<li><a href=#反復数の下界の評価>反復数の下界の評価</a></li>
+</ul>
+</li>
+<li><a href=#ランダムフーリエ特徴の誤差の評価>ランダムフーリエ特徴の誤差の評価</a>
+<ul>
+<li><a href=#ランダムフーリエ特徴の誤差のバウンド>ランダムフーリエ特徴の誤差のバウンド</a></li>
+<li><a href=#ランダムフーリエ特徴の誤差の一様なバウンド>ランダムフーリエ特徴の誤差の一様なバウンド</a></li>
+</ul>
+</li>
+<li><a href=#おわりに>おわりに</a></li>
+<li><a href=#参考文献>参考文献</a></li>
+<li><a href=#日記>日記</a></li>
+</ul>
+</nav>
+</div>
+</span>
+</div>
+<article class=post itemscope itemtype=http://schema.org/BlogPosting>
+<header>
+<h1 class=posttitle itemprop="name headline">
+被覆数と充填数の簡単な応用
+</h1>
+<div class=meta>
+<div class=postdate>
+<time datetime="2021-12-31 14:40:50 +0900 JST" itemprop=datePublished>2021-12-31</time>
+</div>
+<div class=article-read-time>
+<i class="far fa-clock"></i>
+53 minute read
+</div>
+<div class=article-category>
+<i class="fas fa-archive"></i>
+<a class=category-link href=/categories/%E5%BF%9C%E7%94%A8%E6%95%B0%E5%AD%A6>応用数学</a>
+</div>
+<div class=article-tag>
+<i class="fas fa-tag"></i>
+<a class=tag-link href=/tags/%E6%9C%80%E9%81%A9%E5%8C%96 rel=tag>最適化</a>
+,
+<a class=tag-link href=/tags/%E7%A2%BA%E7%8E%87 rel=tag>確率</a>
+,
+<a class=tag-link href=/tags/%E7%B5%B1%E8%A8%88 rel=tag>統計</a>
+,
+<a class=tag-link href=/tags/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92 rel=tag>機械学習</a>
+</div>
+</div>
+</header>
+<div class=content itemprop=articleBody>
+<h1 id=はじめに>はじめに</h1>
+<p><a href=https://neonnnnn.github.io/posts/covering-packing/>前回の記事</a>から悠久の時が経ってしまった……（一週間以内に更新する予定だったのですが、うっかりダンガンロンパに手を出してグダグダになってしまった）。前回の記事ではConvering Number（被覆数）とPacking Number（充填数）を紹介しました。今回の記事では被覆数と充填数の簡単な応用として、</p>
+<ol>
+<li>誤り訂正符号（[1]の4.3より）</li>
+<li>0階の最適化アルゴリズム</li>
+<li>ランダムフーリエ特徴[2]</li>
+</ol>
+<p>の誤差の評価方法を紹介します。</p>
+<h1 id=誤り訂正符号の誤差の評価>誤り訂正符号の誤差の評価</h1>
+<h2 id=問題設定問題意識>問題設定・問題意識</h2>
+<p>舞園さんは長さ$k$の文字列を苗木くんに送りたいです。このとき、攻撃者モノクマによって、送信したメッセージのうち最大で$r$個の文字が書き換えられてしまい、苗木くんは書き換えられたメッセージを受け取ります。例えば、舞園さんは「<strong>エスパーですから</strong>」という文字列を送るも（$k=8$）、モノクマの悪質なイタズラによって、苗木くんが受け取るメッセージは「<strong>アイドルですから</strong>」になってしまう、といったものです（$k=4$）。</p>
+<p>舞園さんはどのようにすれば正しいメッセージを苗木くんに送ることができるでしょうか？一般的な方法は<strong>冗長性</strong>をもたせることです。例えば、<strong>Majority (logic) Decoding</strong>という方法では、舞園さんは元のメッセージを$2r+1$回繰り返したメッセージを送り、苗木くんは繰り返されたメッセージに対して多数決を取ることによって正しい文字列を得ます。上の例にMajority Decodingを適用してみましょう。舞園さんは「エスパーですから」を$2r+1=9$回繰り返した「<strong>エスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですからエスパーですから</strong>」という文字列を送ります。そうすると、どのように$r=4$個の文字を変更しようとも、$9$個の（長さ$k=8$の）文字列の中で最も出現頻度が多いのは「エスパーですから」になり、苗木くんは正しいメッセージを受け取ることができます。</p>
+<p>Majority Decodingはシンプルでわかりやすいですが、直感的にはなんとも効率が悪そうに思えます。
+もっと良い方法はないのでしょうか？</p>
+<h2 id=誤り訂正符号と充填数の関係>誤り訂正符号と充填数の関係</h2>
+<p>上の例では日本語の文字列を考えましたが、ここでは0/1の二値の文字列を考えます。まず、<strong>誤り訂正符号</strong>の定義を以下に示します。</p>
+<dl>
+<dt>定義4.3.3（誤り訂正符号）</dt>
+<dd>ある（固定された）正の整数$k, n, r$が与えられる。２つの写像
+\begin{align}
+E: \{0, 1\}^k \to \{0, 1\}^n \quad \text{and} \quad E: \{0, 1\}^n \to \{0, 1\}^k
+\end{align}
+は、任意の$x \in \{0, 1\}^k$と、$E(x)$と最大で$r$個の文字が異なる任意の文字列$y$について、$D(y)=x$が成り立つとき、($r$個の誤りを訂正できる)符号写像、復号写像という。$E$を誤り訂正符号、$E$の像$E(\{0, 1\}^k)$を符号表（codebook）といい、符号表の各要素（すなわち、$E(x)$）を符号語という。</dd>
+</dl>
+<p>$k, n, r$はそれぞれ「送りたい文字列の長さ」「誤りを考慮して送る文字の長さ」「発生する最大の誤りの数」に対応します。$n$は小さければ小さいほど、効率の良い方法ということになります。前述のMajority decodingでは$n=k(2r+1)$でしたが、これよりも効率の良い方法が存在するのかが気になります。充填数を使うことで、より効率の良い方法が存在することを主張できます。</p>
+<dl>
+<dt>補題4.3.4</dt>
+<dd>正の数$k, r$に対して、$n$が
+\begin{align}
+\log \mathcal{P}(\{0, 1\}^n, d_H, 2r) \ge k
+\end{align}
+を満たすとする。このとき、$k$ビットの文字列を$n$ビットの文字列に符号化し、$r$個の誤りを訂正することのできる、誤り訂正符号が存在する。</dd>
+<dt>証明</dt>
+<dd>$\mathcal{N} \subseteq \{0, 1\}^n$を、$n$次元ハミングキューブ$(\{0, 1\}^n, d_H)$のある$2r$-separatedとする。
+定義より、$\mathcal{N}$の各要素$x, y \in \mathcal{N}$はハミング距離が$2r$より大きい、すなわち、互いに$2r+1$個以上の文字が異なっている。したがって、$x \in \mathcal{N}$は、最大で$r$個の文字が変わり$x' \in \{0, 1\}^n$になったとしても、$\mathcal{N}$の中で最もハミング距離の近い要素は$x$のままである：
+\begin{align}
+x = \underset{y \in \mathcal{N}}{\mathrm{argmin}} \ d_{H}(y, x'), \ \forall x'\in \{0,1\}^n \ \text{s.t.} \ d_{H}(x, x') \le r.
+\end{align}
+ゆえに、$k \le \log |\mathcal{N}|$であるならば、長さ$k$の各文字列を、$\mathcal{N}$の要素を互いに異なるように対応付けることができ（その対応を$E$とする）、$D(y) := E^{-1}\left(\mathrm{argmin}_ {y' \in \mathcal{N}} d_{H}(y, y')\right)$とすることで、$k$ビットの文字列を$n$ビットの文字列に符号化し、$r$個の誤りを訂正することのできる、誤り訂正符号を構成できる。仮定より、$|\mathcal{N}|=2^{k}$であるような$\mathcal{N} \subseteq \{0, 1\}^n$が存在するので、主張を得る。</dd>
+</dl>
+<p>補題4.3.4より、充填数の対数$\log \mathcal{P}(\{0, 1\}^n, d_H, 2r)$（metric entropyと呼ばれます）が$k$以上になるように$n$を設定すれば、誤り訂正符号を構成できることがわかりました。しかし、この充填数を使った不等式だけでは、$n, r, k$の関係がほとんどわからず、実質的にはほとんど何も言えていません。ここで、前回の記事で導出した充填数の下界を利用します。</p>
+<dl>
+<dt>補題4.2.16（ハミングキューブの被覆数と充填数（[1]では練習問題4.2.16））</dt>
+<dd>$K=\{0, 1\}^n$とし、$\varepsilon >0$とする。このとき、
+\begin{align}
+\frac{2^n}{\sum_{k=0}^m \binom{n}{k}} \le \mathcal{N}(K, d_H, \varepsilon) \le \mathcal{P}(K, d_H, \varepsilon) \le \frac{2^n}{\sum_{k=0}^{\lfloor m/2\rfloor} \binom{n}{k}}
+\end{align}
+が成り立つ。</dd>
+</dl>
+<p>これを利用すると以下の定理を得ます。</p>
+<dl>
+<dt>定理4.3.5（誤り訂正符号の保証）</dt>
+<dd>正の数$k, r$に対して、$n$が
+\begin{align}
+n \ge k + 2r \log_2\left(\frac{en}{2r}\right)
+\end{align}
+を満たすとする。このとき、$k$ビットの文字列を$n$ビットの文字列に符号化し、$r$個の誤りを訂正することのできる、誤り訂正符号が存在する。</dd>
+<dt>証明</dt>
+<dd>補題4.2.16より、補題4.3.4の条件は次のように書き換えることができる：
+\begin{align}
+n \ge k + \log_2 \left(\sum_{m=0}^{2r}\binom{n}{m}\right).
+\end{align}
+また、二項係数の和について、以下の不等式が成立する（$n > m$）：
+\begin{align}
+& \sum_{k=0}^{m}\binom{n}{k} \times \left(\frac{m}{n}\right)^m \le \sum_{k=0}^{m}\left[\binom{n}{k} \times \left(\frac{m}{n}\right)^k \right] \\\
+& \le \sum_{k=0}^{n}\left[\binom{n}{k} \times \left(\frac{m}{n}\right)^k \right] = \left(1 + \frac{m}{n}\right)^n \le e^m \\\
+& \rightarrow \sum_{k=0}^{m}\binom{n}{k} \le \left(\frac{en}{m}\right)^m. \label{eq:binom_upper_bound}
+\end{align}
+この不等式\eqref{eq:binom_upper_bound}を$m=2r$として用いることで主張を得る：
+\begin{align}
+n \ge k + \log_2 \left(\frac{en}{2r}\right)^{2r} \rightarrow n \ge k + \log_2 \left(\sum_{m=0}^{2r}\binom{n}{m}\right).
+\end{align}</dd>
+</dl>
+<h1 id=0階の最適化アルゴリズムの誤差の評価>0階の最適化アルゴリズムの誤差の評価</h1>
+<p><a href=https://neonnnnn.github.io/posts/nesterov-book-lower-bound/>前々回の記事</a>では、0階の最適化アルゴリズムの反復数の下界の導出を行いました。その際に、$\ell_{\infty}$ノルム球を実行可能領域とし、また、目的関数は$\ell_{\infty}$ノルムの元でリプシッツ連続としました。では、別のノルムについて、例えば最もよく知られた$\ell_2$ノルムではどうなるのでしょうか。</p>
+<h2 id=問題設定>問題設定</h2>
+<p><a href=https://neonnnnn.github.io/posts/nesterov-book-lower-bound/>前々回の記事</a>から考えるノルムを変えるだけですが、再掲します。関数$f:\mathbb{R}^n \to \mathbb{R}$について、以下の最適化問題を考えます：
+\begin{align}
+\min_{x \in B_n} f(x),
+\end{align}
+ここで、$B_n$は（半径1の）$\ell_{2}$ノルム球
+\begin{align}
+B_n = \{x \in \mathbb{R}^n : \lVert x \rVert_2 \le 1\}
+\end{align}
+であり、また、$f$は$\ell_{2}$ノルムの意味で$L$-リプシッツ連続
+\begin{align}
+|f(x)-f(y)| \le L \lVert x - y \rVert_{2}, \forall x, y \in B_n, \exists L > 0
+\end{align}
+であるとします。また、「連続最適化問題を解く」は「$\varepsilon$-近似解（$\varepsilon>0$）を得る」こと、すなわち、
+\begin{align}
+f(\bar{x}) - f(x^<em>) &lt; \varepsilon, \ \text{where} \ x^</em> = \underset{x\in B_n} {\mathrm{argmin}}f(x)
+\end{align}
+を満たす$\bar{x} \in B_n$を得ること、と定義します。この$\bar{x}$を得るための反復数の下界、すなわち、最悪ケースでどの程度の反復数が必要になるのか、ということについて考えます。特に、0階の最適化アルゴリズム、すなわち、関数の評価値だけを使うアルゴリズムについて考えます。</p>
+<h2 id=反復数の下界の評価>反復数の下界の評価</h2>
+<p>$\ell_{\infty}$ノルムの場合の証明方法を復習します。実行可能領域を$\lfloor L/2\varepsilon \rfloor^n$個のグリッド（$\ell_{\infty}$球）に分割し、最適化アルゴリズムを各クエリ$x_k$に対して$f(x_k)=0$を返してシミュレートします。そうすると、$N &lt; \lfloor L/2\varepsilon \rfloor^n$回の試行では、少なくとも１つ以上、アルゴリズムのクエリが入らないグリッドが存在します。そのようなグリッドを一つとり、その中心を$x^<em>$とし、関数を
+\begin{align}
+f(x) = \min \{0, L \lVert x - x^</em> \rVert_{(\infty)} - \varepsilon\}.
+\end{align}
+と定めることで、$\lfloor L/2\varepsilon \rfloor^n$未満の反復では$\varepsilon$-近似解を得ることのできない関数を作り、反復数の下界が$\lfloor L/2\varepsilon \rfloor^n$であると証明しました。</p>
+<p>上の証明でキモとなる操作の一つは、実行可能領域$B_n$を小さなノルム球で分割することでした。$\ell_{2}$ノルムの場合は、直感的にはこのような分割を行えなさそうであるため、同様の方法では証明ができなさそうに思えます。しかし、よく考えると、$B_n$を小さなノルム球で「分割」する必要はなく、小さなノルム球をいくつ「詰め込めるか」さえわかれば良いということがわかります：詰め込んだノルム球の数より少ない反復数の場合、クエリが入らないノルム球が存在するので、そのようなノルム球の中心に最適解を配置することで下界を導出することができます。すなわち、以下が成り立ちます。</p>
+<dl>
+<dt>補題2.1</dt>
+<dd>$d(x, y) = \lVert x - y \rVert_2$、$\varepsilon &lt; L/2$とする。このとき、前述の最適化問題における各0階の最適化アルゴリズムに対して、精度$\varepsilon$の解を得るために、少なくとも$\mathcal{P}(B_n, d, 2\varepsilon/L)$回のオラクル呼び出しを必要とする関数$f$が存在する。</dd>
+<dt>証明</dt>
+<dd>$B_n$の$2\varepsilon/L$-separated $\mathcal{N} \subseteq B_n$を一つとる。$N &lt; |\mathcal{N}|$とし、最適化アルゴリズムを、各クエリ$x_k$（$0 \le k &lt; N$）に対して$f(x_k)=0$を返すことで$N$回シミュレートする。$\mathcal{N}$の各点は、定義より、互いに距離が$2\varepsilon/L$より大きい。したがって、各$x_k$について、$\mathcal{N}$の点で$x_k$との距離が$\varepsilon/L$以下であるような点は高々1つである：$|\{y \in \mathcal{N}: d(x_k, y) \le \varepsilon/L\}| \le 1$。ゆえに、（$N&lt;|\mathcal{N}|$より）すべての$x_k$について、距離が$\varepsilon/L$より大きい$y \in \mathcal{N}$が少なくとも1つ以上存在する：$\{y \in \mathcal{N}: d(x_k, y) > \varepsilon/L, 0\le k &lt; N\} \neq \emptyset$。そのような点の一つを$x^* $とし、$f$を
+\begin{align}
+f(x) = \min \left\{0, L \lVert x - x^* \rVert_{2} - \varepsilon\right\}.
+\end{align}
+とすると、この$f$は$L$-リプシッツ連続性を満たし、$f(x^* )=-\varepsilon$であり、各$f(x_k)=0$でシミュレーションに矛盾せず、最適化アルゴリズムは$N &lt; |\mathcal{N}|$回のクエリでは$\varepsilon$-近似解を得ることができない。$\mathcal{N}$は任意の$2\varepsilon/L$-separatedであり、$2\varepsilon/L$-separatedの最大濃度は$\mathcal{P}(B_n, d, 2\varepsilon/L)$であることから、主張を得る。</dd>
+</dl>
+<p>下界を得ることができましたが、補題2.1もやはり単に充填数が下界になると主張しているだけで、これだけではよくわかりません。ここで、<a href=https://neonnnnn.github.io/posts/covering-packing/>前回の記事</a>で示した被覆数の上界・下界（系4.2.13）と被覆数と充填数の等価性（補題4.2.8）より、以下の主張を得ます。</p>
+<dl>
+<dt>定理2.2</dt>
+<dd>$d(x, y) = \lVert x - y \rVert_2$、$\varepsilon &lt; L/2$とする。このとき、前述の最適化問題における各0階の最適化アルゴリズムに対して、精度$\varepsilon$の解を得るために、少なくとも$(L/2\varepsilon)^{n}$回のオラクル呼び出しを必要とする関数$f$が存在する。</dd>
+<dt>証明</dt>
+<dd>系4.2.13と補題4.2.8より、
+\begin{align}
+(L/2\varepsilon)^n \le \mathcal{N}(B_n, d, 2\varepsilon/L) \le \mathcal{P}(B_n, d, 2\varepsilon/L)
+\end{align}
+であり、これを補題2.1に適用することで主張を得る。</dd>
+</dl>
+<h1 id=ランダムフーリエ特徴の誤差の評価>ランダムフーリエ特徴の誤差の評価</h1>
+<p>ランダムフーリエ特徴[2]について簡単に説明します。ランダムフーリエ特徴[2]は、カーネル法、特に、平行移動不変なカーネル関数を用いるカーネル法の近似アルゴリズムの一つです。平行移動不変なカーネル関数とは、二つの入力$\pmb{x}, \pmb{y} \in \mathbb{R}^d$の差$\pmb{x}-\pmb{y}$の一変数関数として書けるようなカーネル関数のことで、例えばRBFカーネル$k(\pmb{x}, \pmb{y}) = \exp (-\lVert \pmb{x}-\pmb{y}\rVert _2^2/ (2\sigma^2))$等が該当します（以降、平行移動不変な二変数関数を$\pmb{x}-\pmb{y}$の一変数関数とみなし、$k(\pmb{x}-\pmb{y})$のように書くことがあります）。最大値が1にスケーリングされた平行移動不変なカーネル関数$k:\mathbb{R}^d\times\mathbb{R}^d\to\mathbb{R}$に対する、$2D$次元のランダムフーリエ特徴写像$z: \mathbb{R}^d \to \mathbb{R}^{2D}$は以下で定義されます：
+\begin{align}
+z(\pmb{x}) := \frac{1}{\sqrt{D}}\begin{pmatrix}
+\cos \left(\pmb{w}_1^\top \pmb{x}\right) \\\
+\sin \left(\pmb{w}_1^\top \pmb{x}\right) \\\
+\vdots \\\
+\cos \left(\pmb{w}_D^\top \pmb{x}\right) \\\
+\sin \left(\pmb{w}_D^\top \pmb{x}\right)
+\end{pmatrix}
+\label{eq:random_fourier_feature}
+\end{align}
+ここで、$\pmb{w} _{i} \in \mathbb{R}^d, \ i \in [D]$は各要素がカーネル関数$k$によって定まる適切な分布からサンプリングされたベクトルです。$D$はユーザが定めるパラメータで、$D$はモンテカルロサンプリングにおけるサンプリング数のようなものだと思えばよいです（大きいほど近似精度が良くなります）。$\pmb{w} _{i}$の分布は近似したいカーネル関数に依存しますが、よく知られたものだと、例えばRBFカーネル$k(\pmb{x}, \pmb{y})=\exp (-\lVert \pmb{x}-\pmb{y}\rVert_2^2/2\sigma^2)$のときはガウス分布$\mathcal{N}(0, \sigma^2)$になります。</p>
+<p>上述したランダムフーリエ特徴はカーネル関数$k$を内積の意味で近似します。より正確に言うと、ランダムフーリエ特徴の内積は、元のカーネル関数の不偏推定量になっています：
+\begin{align}
+\mathbb{E}_{\pmb{W}}[z(\pmb{x})^\top z(\pmb{y})] = k(\pmb{x}, \pmb{y}) \ \forall \pmb{x}, \pmb{y} \in \mathbb{R}^d.
+\end{align}
+したがって、カーネル法を使う代わりに、このランダムフーリエ特徴を新たな特徴量とした線形モデルを用いることで、カーネル法と同等の精度を達成しつつ、カーネル法の持つ次元の呪いならぬサンプル数の呪いから脱却しよう、というのがランダムフーリエ特徴のアイデアです。もちろん、サンプル数の呪いから逃れた代わりに今度は次元の呪い問題に直面するわけですが、$D$はそう大きくなくともうまく動くケースが多いです（ただし、元の次元$d$よりは大きくなければならないことが多いです）。カーネル関数によって誘導される超高次元空間の特徴ベクトルに対する次元削減を、超高次元空間の座標を介さずに・学習などもせずランダムに行う方法、と考えるとわかりやすいかもしれません。</p>
+<h2 id=ランダムフーリエ特徴の誤差のバウンド>ランダムフーリエ特徴の誤差のバウンド</h2>
+<p>ランダムフーリエ特徴同士の内積の期待値は元のカーネル関数の値と等しいですが、あくまで期待値が等しいというだけなので、有限の$D$では誤差が生じます。そうなると当然、その誤差がどれくらいのものであるのか、というのが気になってきます。幸い、Hoeffdingの不等式を用いることで以下の集中不等式を得ることができます（有界な確率変数に対するHoeffdingの不等式を用いるだけなので証明は省略）。</p>
+<dl>
+<dt>補題3.1</dt>
+<dd>$k:\mathbb{R}^d\times\mathbb{R}^d \to \mathbb{R}$を最大値が1にスケーリングされた平行移動不変なカーネル関数、$z: \mathbb{R}^d \to \mathbb{R}^{2D}$を式\eqref{eq:random_fourier_feature}で定義された$k$の$2D$次元のランダムフーリエ特徴とする。このとき、任意の$\pmb{x}, \pmb{y} \in \mathbb{R}^d$について、
+\begin{align}
+p\left(\lvert z(\pmb{x})^\top z(\pmb{y}) - k(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \le 2 \exp \left(-\frac{D\varepsilon^2}{4}\right).
+\label{eq:random_fourier_error}
+\end{align}</dd>
+</dl>
+<h2 id=ランダムフーリエ特徴の誤差の一様なバウンド>ランダムフーリエ特徴の誤差の一様なバウンド</h2>
+<p>補題3.1で示した不等式\eqref{eq:random_fourier_error}は、与えられた任意の一つのペアの誤差が$\varepsilon$以上になる確率を抑えたものでした。しかし、カーネル関数とその誤差を評価したいのは一つのペアだけではないでしょう。そこで、最悪ケース、すなわち誤差の上限に関する集中不等式
+\begin{align}
+p\left(\sup_{\pmb{x}, \pmb{y} \in \mathcal{M} \subset \mathbb{R}^d} \lvert z(\pmb{x})^\top z(\pmb{y}) - k(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \le \ ?
+\end{align}
+を考えることにします。ここで、$\mathcal{M} \subseteq \mathbb{R}^d$は特徴ベクトルの集合・定義域です。もし$\mathcal{M}$が有限集合であるならば、誤差の最大値は誤差の和より小さい（誤差の最大値が$\varepsilon$以上ならば、和も$\varepsilon$以上である）ことと、Union Boundにより、とりあえずは
+\begin{align}
+p\left(\max_{\pmb{x}, \pmb{y} \in \mathcal{M}} \lvert z(\pmb{x})^\top z(\pmb{y}) - k(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) & \le p\left(\sum_{\pmb{x}, \pmb{y} \in \mathcal{M}} \lvert z(\pmb{x})^\top z(\pmb{y}) - k(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \\\
+& \le \sum_{\pmb{x}, \pmb{y} \in \mathcal{M}} p\left(\lvert z(\pmb{x})^\top z(\pmb{y}) - k(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \\\
+& \le 2\lvert \mathcal{M} \rvert^2 \exp \left(-\frac{D\varepsilon^2}{4}\right)
+\end{align}
+と抑えることができます。しかし、$\mathcal{M}$は非可算無限集合（例えば、ノルムの制限された集合）と仮定されることが多いと考えられ、その場合は上のような導出はできません。そこで、$\varepsilon$-netを利用します：$\mathcal{M}$に対する$\varepsilon$-netを構成し、$\varepsilon$-netを$\mathcal{M}$の代表点の集合として考えることで、$\mathcal{M}$というヨクワカラン集合上の問題を、「有限個」の小さな球上の解きやすい問題に落とし込みます。</p>
+<dl>
+<dt>定理3.2</dt>
+<dd>$k:\mathbb{R}^d\times\mathbb{R}^d \to \mathbb{R}$は、連続、平行移動不変、最大値$k(0)=1$、$\nabla^2 k(0)$が存在する（半正定値な）カーネル関数とする。$z: \mathbb{R}^d \to \mathbb{R}^{2D}$を式\eqref{eq:random_fourier_feature}で定義された$k$の$2D$次元のランダムフーリエ特徴、$\mathcal{M}$を$\mathbb{R}^d$のコンパクト部分集合とし、
+\begin{align}
+s(\pmb{x}, \pmb{y}) &:= z(\pmb{x})^{\top}z(\pmb{y}),\\\
+f(\pmb{x}, \pmb{y}) &:= s(\pmb{x}, \pmb{y}) - k(\pmb{x}, \pmb{y})
+\end{align}
+とする。このとき、$\sigma_p^2 = \mathbb{E}[w^2]$、$\mathrm{diam}(\mathcal{M})$は$\mathcal{M}$の直径であり、$\sigma_p$、$\mathrm{diam}(\mathcal{M})$、$D$、$\varepsilon$が条件
+\begin{align}
+\frac{\sigma_p \mathrm{diam}(\mathcal{M})}{\varepsilon} \ge 1, \ D \ge \frac{32 d}{\varepsilon^2}
+\label{eq:random_fourier_condition}
+\end{align}
+を満たすならば、
+\begin{align}
+p\left(\sup_{\pmb{x}, \pmb{y} \in \mathcal{M} \subset \mathbb{R}^d} \lvert f(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \le 72 \left(\frac{\mathrm{diam}(\mathcal{M})\sigma _p}{\varepsilon}\right)^2 \exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)
+\label{eq:random_fourier_error_uniform_bound}
+\end{align}
+が成り立つ。</dd>
+<dt>証明</dt>
+<dd>$k$は定義より$\Delta=\pmb{x}-\pmb{y}$の一変数関数として書くことができる。$s$は
+\begin{align}
+s(\pmb{x}, \pmb{y}) &= \frac{1}{D}\sum_{j=1}^{D} \left(\cos \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \cos \left(\pmb{w}_j^\top \pmb{y}\right) + \sin \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \sin \left(\pmb{w}<em>j^\top \pmb{y}\right)\right) \\\
+&= \frac{1}{D}\sum</em>{j=1}^{D} \cos \left(\pmb{w}_j^\top (\pmb{x}-\pmb{y})\right)
+\end{align}
+と変形できるため、$s$も平行移動不変、ゆえに$f$も平行移動不変である。したがって、これ以降は$\mathcal{M} _{\Delta} := \{\pmb{x}-\pmb{y} : \pmb{x}, \pmb{y} \in \mathcal{M}\}$上で誤差$f$を考える。</dd>
+<dd>
+<p>$\mathcal{M}$がコンパクトであるという仮定より、$\mathcal{M} _{\Delta}$もまたコンパクトである。さらに、$\mathcal{M} _{\Delta}$は中心$\pmb{0}$、半径$\mathrm{diam}(\mathcal{M})$のユークリッド球に覆われる：$\mathcal{M} _{\Delta} \subset B_2^d(\pmb{0}, \mathrm{diam}(\mathcal{M}))$。ゆえに、<a href=https://neonnnnn.github.io/posts/covering-packing/>前回の記事</a>で示したユークリッド球の被覆数の上界（系4.2.13）より、$\mathcal{M} _{\Delta}$の$r$-被覆数$\mathcal{N}(\mathcal{M} _{\Delta}, r)$について
+\begin{align}
+\mathcal{N}(\mathcal{M} _{\Delta}, r) \le \mathcal{N}(B_2^d(\pmb{0}, \mathrm{diam}(\mathcal{M})), r) \le \left(\frac{\mathrm{diam}(\mathcal{M})}{r} + 2\right)^{d}\ \forall r > 0
+\label{eq:covering_number_upper_bound}
+\end{align}
+が成り立つ。</p>
+</dd>
+<dd>
+<p>$\mathcal{N} = \{\Delta _{i}\} _{i=1}^{T} \subset \mathcal{M} _{\Delta}$を$\mathcal{M} _{\Delta}$の$r$-netの一つとする。また、$L _f > 0$を、$f$の（$\mathcal{M} _{\Delta}$での）リプシッツ定数であるとする。このとき、$\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert$について
+\begin{align}
+\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert &\le \max _{i \in [T]} \max _{\Delta \in B _{2}^d(\Delta _i, r)} |f(\Delta)| \label{eq:supf_le1} \\\
+& \le \max _{i \in [T]} \max _{\Delta \in B _{2}^d(\Delta _i, r)} \left(L _f \lVert \Delta _i - \Delta \rVert _2 + \lvert f(\Delta _i) \rvert \right) \label{eq:supf_le2}\\\
+&\le L _f \cdot r + \max _{i \in [T]} |f(\Delta _i)|. \label{eq:supf_le3}
+\end{align}
+が成り立つ。ただし、一つ目の不等式\eqref{eq:supf_le1}では$\mathcal{N}$が$r$-netである（すなわち、$\{\Delta_i \} _{i=1}^{T}$を中心とする半径$r$の球の和集合が$\mathcal{M} _{\Delta}$を覆っている）こと、二つ目の不等式\eqref{eq:supf_le2}では$f$の$\mathcal{M}$でのリプシッツ連続性、最後の不等式\eqref{eq:supf_le3}では再び$r$-netであることを利用した。不等式\eqref{eq:supf_le3}より、$\max _{i \in [T]}\lvert f(\Delta_i) \rvert \le \frac{\varepsilon}{2}$かつ$L_f \le \varepsilon / (2r)$ならば$\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \le \varepsilon$となることがわかる。それぞれの確率の上限を求める。まず、Union Boundと補題3.1より、
+\begin{align}
+p\left(\max _{i \in [T]}\lvert f(\Delta_i) \rvert \ge \frac{\varepsilon}{2}\right) \le 2T\exp \left(-\frac{D\varepsilon^2}{16}\right) \label{eq:nat_max_error_bound}
+\end{align}
+を得る。Markovの不等式より、
+\begin{align}
+p\left(L _f \ge \frac{\varepsilon}{2r} \right) = p\left(L _f^2 \ge \left(\frac{\varepsilon}{2r}\right)^2 \right) \le \mathbb{E}\left[L _f^2\right ] \cdot \left(\frac{2r}{\varepsilon}\right)^2
+\end{align}
+であり、さらに$\mathbb{E}[L_f^2]$は以下のように計算できる（この計算はやや面倒であるのと、主として扱いたい部分でもないので省略、詳細は[3]を参照）：
+\begin{align}
+\mathbb{E}[L_f^2] \le \mathbb{E}[w^2] = \sigma_p^2.
+\end{align}
+それゆえ、
+\begin{align}
+p\left(L _f \ge \frac{\varepsilon}{2r} \right) \le \left(\frac{2\sigma _p r}{\varepsilon}\right)^2 \label{eq:lf_bound}
+\end{align}
+が成り立つ。不等式\eqref{eq:lf_bound}と\eqref{eq:nat_max_error_bound}を用いることで、
+\begin{align}
+p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \le \varepsilon\right) &\ge 1 - 2 T \exp \left(-\frac{D\varepsilon^2}{16}\right) - \left(\frac{2\sigma _p r}{\varepsilon}\right)^2 \\\
+\to p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) & \le 2 T \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2
+\end{align}
+を得る。$\mathcal{N}$は任意の$r$-netであったから、被覆数の不等式\eqref{eq:covering_number_upper_bound}より、さらに
+\begin{align}
+p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) \le 2 \left(\frac{2\mathrm{diam}(\mathcal{M})}{r} + 1\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2
+\end{align}
+を得る。$r &lt; \mathrm{diam}(\mathcal{M})$とすると、$2\mathrm{diam}(\mathcal{M})/r + 1 &lt; 3\mathrm{diam}(\mathcal{M})/r$より、さらに
+\begin{align}
+p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) \le 2 \left(\frac{3\mathrm{diam}(\mathcal{M})}{r}\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2
+\label{eq:random_fourier_error_uniform_bound_simple}
+\end{align}
+を得る。ここで、$c _1 r^{-d} + c _2 r^2$は、$r=(c _1 / c _2)^{1/(d+2)}$とすると、$c _1 r^{-d} + c _2 r^2=2 c _2 ^{d/(d+2)} c_1 ^{2/(d+2)}$と書ける。これを\eqref{eq:random_fourier_error_uniform_bound_simple}に適用すると、$c_1$と$c_2$はそれぞれ
+\begin{align}
+c_1=2 \left(3\mathrm{diam}(\mathcal{M})\right)^{d}\exp\left(-\frac{D\varepsilon^2}{16}\right), \ c_2=\left(\frac{2\sigma_p}{\varepsilon}\right)^2
+\end{align}
+であるから、
+\begin{align}
+r = \left(2 \left(3\mathrm{diam}(\mathcal{M})\right)^{d}\exp\left(-\frac{D\varepsilon^2}{16}\right) \cdot \left(\frac{\varepsilon}{2\sigma_p}\right)^2 \right)^{1/(d+2)}
+\label{eq:appropriate_r}
+\end{align}
+とすると、
+\begin{align}
+p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert > \varepsilon\right) &\le 2 \left(\frac{3\mathrm{diam}(\mathcal{M})}{r}\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2 \\\
+&= 2\cdot 2^{\frac{2+2d}{d+2}}\cdot 3^\frac{2d}{d+2}\exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)\left(\frac{\mathrm{diam}(\mathcal{M})\sigma _p}{\varepsilon}\right)^{\frac{2d}{d+2}} \\\
+&\le 72 \left(\frac{\mathrm{diam}(\mathcal{M})\sigma _p}{\varepsilon}\right)^2 \exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)
+\end{align}
+が成り立つ。これはまさしく式\eqref{eq:random_fourier_error_uniform_bound}である。ただし、最後の不等式では\eqref{eq:random_fourier_condition}の1つ目を利用した。また、式\eqref{eq:appropriate_r}で定められた$r$は$r &lt; \mathrm{diam}(\mathcal{M})$の条件を満たす：
+\begin{align}
+r &= \left(2 \left(3\mathrm{diam}(\mathcal{M})\right)^{d}\exp\left(-\frac{D\varepsilon^2}{16}\right) \cdot \left(\frac{\varepsilon}{2\sigma_p}\right)^2 \right)^{1/(d+2)}\\\
+&\le \left(2 \left(3\mathrm{diam}(\mathcal{M})\right)^{d}\exp\left(-2d\right) \cdot \left(\frac{\varepsilon}{2\sigma_p}\right)^2 \right)^{1/(d+2)} \\\
+&\le \mathrm{diam}(\mathcal{M}) \cdot \left(\frac{1}{2}\left(\frac{3}{\exp (2)}\right)^d\cdot \left(\frac{\varepsilon}{\mathrm{diam}(\mathcal{M})\sigma_p}\right)^2 \right)^{1/(d+2)}\\\
+&&lt; \mathrm{diam}(\mathcal{M}).
+\end{align}
+以上で主張を得た。</p>
+</dd>
+</dl>
+<p>ちなみに、元の論文[2]では、被覆数に関する次の不等式[4, Proposition 5]を利用します：
+\begin{align}
+\mathcal{N}(B_2^d(\pmb{0}, \mathrm{diam}(\mathcal{M})), r) \le \left(\frac{4\mathrm{diam}(\mathcal{M})}{r}\right)^d.
+\label{eq:covering_number_upper_bound_original}
+\end{align}
+証明を書くの画面だったのと、せっかくなので前回導出した不等式を使おうと考え、上で示した証明では使いませんでした。この不等式\eqref{eq:covering_number_upper_bound_original}のもとでは、\eqref{eq:random_fourier_condition}の$D$に関する条件なしに以下を得ます：
+\begin{align}
+p\left(\sup_{\pmb{x}, \pmb{y} \in \mathcal{M} \subset \mathbb{R}^d} \lvert f(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \le 128 \left(\frac{\mathrm{diam}(\mathcal{M})\sigma <em>p}{\varepsilon}\right)^2 \exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)
+\label{eq:random_fourier_error_uniform_bound_original}
+\end{align}
+\eqref{eq:random_fourier_error_uniform_bound}と\eqref{eq:random_fourier_error_uniform_bound_original}では定数倍が変わっただけなので、仮定がなくなっている分、被覆数の不等式としては\eqref{eq:covering_number_upper_bound_original}を利用したほうが良さそうに思えますが、実は、案外そうでもありません。$D$の条件\eqref{eq:random_fourier_condition}は、式\eqref{eq:appropriate_r}で定めた$r$が$r &lt; \mathrm{diam}(\mathcal{M})$の条件を満たすように仮定したものです。この条件を満たさない場合、すなわち$r \ge \mathrm{diam}(\mathcal{M})$の場合でも元論文の\eqref{eq:random_fourier_error_uniform_bound_original}は成り立つわけですが、そもそもこの条件を満たさない場合、\eqref{eq:covering_number_upper_bound}や\eqref{eq:covering_number_upper_bound_original}は非常にガバガバなバウンドになります（$r>\mathrm{diam}(\mathcal{M})$のとき、$\{\pmb{0}\}$が自明に$\mathcal{M}</em>{\Delta}$の$r$-netになる、すなわち被覆数は$1$）。結果として、元論文のバウンド\eqref{eq:random_fourier_error_uniform_bound_original}は例えば「誤差の最大値が$\varepsilon$以上になる確率は1000以下」といったように無意味なものとなります。この意味で、大差はありません。</p>
+<h1 id=おわりに>おわりに</h1>
+<p>本記事では、被覆数と充填数の簡単な応用を紹介しました。</p>
+<ul>
+<li>誤り訂正符号: 冗長性をもたせることで誤りの訂正を可能にするが、一体どの程度の冗長性をもたせればよいのかを見積もるのに充填数を利用しました。$2r$-separatedの各要素を符号語として利用することで、必要なbit数を充填数によって条件つけることができます。</li>
+<li>0階の最適化アルゴリズム:$\ell_{\infty}$ノルム球上で考える場合は、球をグリッドに区切ることで必要な反復数の下界を導出しましたが、$\ell_2$ノルム球上で考える場合は、充填数によって必要な反復数の下界を導出することができます。</li>
+<li>ランダムフーリエ特徴：誤差の一様な上界を導出するのに被覆数を利用しました。（非可算）無限集合に対しては雑なUnionバウンドは意味を持ちませんが、netを代表点とすることで、Unionバウンドを取る操作を意味のある行為にし、それによって一様な上界を導出することができます。</li>
+</ul>
+<h1 id=参考文献>参考文献</h1>
+<p>[1] R. Vershynin. High dimensional probability. An introduction with applications in Data Science. Cambridge University Press, 2018.</p>
+<p>[2] A. Rahimi and B. Recht. Random Features for Large-Scale Kernel Machines. In NeurIPS, pp. 1177&ndash;1184, 2007.</p>
+<p>[3] D. J. Sutherland and J. Schneider. On the error of random fourier features. In UAI, pp. 862–-871, 2015.</p>
+<p>[4] F. Cucker and S. Smale. On the mathematical foundations of learning. Bull. Amer. Soc., 39:1–49, 2001.</p>
+<h1 id=日記>日記</h1>
+<p>本記事の11月中の投稿を犠牲にすることでプレイしたダンガンロンパはとても面白かったです。私はミステリがそれなりに好きなのですが、ダンガンロンパで発生した事件はどれも、事件発生前や事件発生直後の予想からもう一段ステップ複雑で、とても良い体験ができました。また、キャラゲーとしても個人的にはとても満足でした。チャプター1の終わりに、苗木くんが、舞園さんの口癖を受けたセリフを言うシーンがとても好きです。人工知能技術の例としてSVMが挙げられていたのも趣深かったです。また、先日たまたまコインランドリーを利用したのですが、掛け布団が激しく回っている様を見て某バターのオシオキが脳裏によぎりました。ダンガンロンパをプレイ済みの皆様も是非、ドラム式洗濯機をご利用の際は思い出してください。</p>
+</div>
+</article>
+<div class=blog-post-comments>
+<div id=disquss_thread>
+<script src=https://utteranc.es/client.js repo=neonnnnn/neonnnnn.github.io issue-term=pathname label=Comment theme=github-light crossorigin=anonymous async></script>
+</div>
+</div>
+<div id=footer-post-container>
+<div id=footer-post>
+<div id=nav-footer style=display:none>
+<ul>
+<li><a href=/>Home</a></li>
+<li><a href=/posts>Writings</a></li>
+<li><a href=/categories>Categories</a></li>
+<li><a href=/tags>Tags</a></li>
+<li><a href=/about>About</a></li>
+</ul>
+</div>
+<div id=toc-footer style=display:none>
+<nav id=TableOfContents>
+<ul>
+<li><a href=#はじめに>はじめに</a></li>
+<li><a href=#誤り訂正符号の誤差の評価>誤り訂正符号の誤差の評価</a>
+<ul>
+<li><a href=#問題設定問題意識>問題設定・問題意識</a></li>
+<li><a href=#誤り訂正符号と充填数の関係>誤り訂正符号と充填数の関係</a></li>
+</ul>
+</li>
+<li><a href=#0階の最適化アルゴリズムの誤差の評価>0階の最適化アルゴリズムの誤差の評価</a>
+<ul>
+<li><a href=#問題設定>問題設定</a></li>
+<li><a href=#反復数の下界の評価>反復数の下界の評価</a></li>
+</ul>
+</li>
+<li><a href=#ランダムフーリエ特徴の誤差の評価>ランダムフーリエ特徴の誤差の評価</a>
+<ul>
+<li><a href=#ランダムフーリエ特徴の誤差のバウンド>ランダムフーリエ特徴の誤差のバウンド</a></li>
+<li><a href=#ランダムフーリエ特徴の誤差の一様なバウンド>ランダムフーリエ特徴の誤差の一様なバウンド</a></li>
+</ul>
+</li>
+<li><a href=#おわりに>おわりに</a></li>
+<li><a href=#参考文献>参考文献</a></li>
+<li><a href=#日記>日記</a></li>
+</ul>
+</nav>
+</div>
+<div id=share-footer style=display:none>
+<ul>
+<li>
+<a class=icon href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f" aria-label=Facebook>
+<i class="fab fa-facebook fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://twitter.com/share?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&text=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Twitter>
+<i class="fab fa-twitter fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Linkedin>
+<i class="fab fa-linkedin fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&is_video=false&description=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Pinterest>
+<i class="fab fa-pinterest fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="mailto:?subject=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8&body=Check out this article: https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f" aria-label=Email>
+<i class="fas fa-envelope fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://getpocket.com/save?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=Pocket>
+<i class="fab fa-get-pocket fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://reddit.com/submit?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&title=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label=reddit>
+<i class="fab fa-reddit fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="http://www.tumblr.com/share/link?url=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&name=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8&description=%e3%81%af%e3%81%98%e3%82%81%e3%81%ab%20%e5%89%8d%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%8b%e3%82%89%e6%82%a0%e4%b9%85%e3%81%ae%e6%99%82%e3%81%8c%e7%b5%8c%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%a3%e3%81%9f%e2%80%a6%e2%80%a6%ef%bc%88%e4%b8%80%e9%80%b1%e9%96%93%e4%bb%a5%e5%86%85%e3%81%ab%e6%9b%b4%e6%96%b0%e3%81%99%e3%82%8b%e4%ba%88%e5%ae%9a%e3%81%a0%e3%81%a3%e3%81%9f%e3%81%ae%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e3%81%86%e3%81%a3%e3%81%8b%e3%82%8a%e3%83%80%e3%83%b3%e3%82%ac%e3%83%b3%e3%83%ad%e3%83%b3%e3%83%91%e3%81%ab%e6%89%8b%e3%82%92%e5%87%ba%e3%81%97%e3%81%a6%e3%82%b0%e3%83%80%e3%82%b0%e3%83%80%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%a3%e3%81%9f%ef%bc%89%e3%80%82%e5%89%8d%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%a7%e3%81%afConvering%20Number%ef%bc%88%e8%a2%ab%e8%a6%86%e6%95%b0%ef%bc%89%e3%81%a8Packing%20Number%ef%bc%88%e5%85%85%e5%a1%ab%e6%95%b0%ef%bc%89%e3%82%92%e7%b4%b9%e4%bb%8b%e3%81%97%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%e4%bb%8a%e5%9b%9e%e3%81%ae%e8%a8%98%e4%ba%8b%e3%81%a7%e3%81%af%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8%e3%81%a8%e3%81%97%e3%81%a6%e3%80%81%0a%20%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%ef%bc%88%5b1%5d%e3%81%ae4.3%e3%82%88%e3%82%8a%ef%bc%89%200%e9%9a%8e%e3%81%ae%e6%9c%80%e9%81%a9%e5%8c%96%e3%82%a2%e3%83%ab%e3%82%b4%e3%83%aa%e3%82%ba%e3%83%a0%20%e3%83%a9%e3%83%b3%e3%83%80%e3%83%a0%e3%83%95%e3%83%bc%e3%83%aa%e3%82%a8%e7%89%b9%e5%be%b4%5b2%5d%20%20%e3%81%ae%e8%aa%a4%e5%b7%ae%e3%81%ae%e8%a9%95%e4%be%a1%e6%96%b9%e6%b3%95%e3%82%92%e7%b4%b9%e4%bb%8b%e3%81%97%e3%81%be%e3%81%99%e3%80%82%0a%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%ae%e8%aa%a4%e5%b7%ae%e3%81%ae%e8%a9%95%e4%be%a1%20%e5%95%8f%e9%a1%8c%e8%a8%ad%e5%ae%9a%e3%83%bb%e5%95%8f%e9%a1%8c%e6%84%8f%e8%ad%98%20%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e9%95%b7%e3%81%95%24k%24%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%ab%e9%80%81%e3%82%8a%e3%81%9f%e3%81%84%e3%81%a7%e3%81%99%e3%80%82%e3%81%93%e3%81%ae%e3%81%a8%e3%81%8d%e3%80%81%e6%94%bb%e6%92%83%e8%80%85%e3%83%a2%e3%83%8e%e3%82%af%e3%83%9e%e3%81%ab%e3%82%88%e3%81%a3%e3%81%a6%e3%80%81%e9%80%81%e4%bf%a1%e3%81%97%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%81%ae%e3%81%86%e3%81%a1%e6%9c%80%e5%a4%a7%e3%81%a7%24r%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e6%9b%b8%e3%81%8d%e6%8f%9b%e3%81%88%e3%82%89%e3%82%8c%e3%81%a6%e3%81%97%e3%81%be%e3%81%84%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%af%e6%9b%b8%e3%81%8d%e6%8f%9b%e3%81%88%e3%82%89%e3%82%8c%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e5%8f%97%e3%81%91%e5%8f%96%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e4%be%8b%e3%81%88%e3%81%b0%e3%80%81%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%a8%e3%81%84%e3%81%86%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e9%80%81%e3%82%8b%e3%82%82%ef%bc%88%24k%3d8%24%ef%bc%89%e3%80%81%e3%83%a2%e3%83%8e%e3%82%af%e3%83%9e%e3%81%ae%e6%82%aa%e8%b3%aa%e3%81%aa%e3%82%a4%e3%82%bf%e3%82%ba%e3%83%a9%e3%81%ab%e3%82%88%e3%81%a3%e3%81%a6%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%8c%e5%8f%97%e3%81%91%e5%8f%96%e3%82%8b%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%81%af%e3%80%8c%e3%82%a2%e3%82%a4%e3%83%89%e3%83%ab%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%97%e3%81%be%e3%81%86%e3%80%81%e3%81%a8%e3%81%84%e3%81%a3%e3%81%9f%e3%82%82%e3%81%ae%e3%81%a7%e3%81%99%ef%bc%88%24k%3d4%24%ef%bc%89%e3%80%82%0a%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e3%81%a9%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%e3%81%99%e3%82%8c%e3%81%b0%e6%ad%a3%e3%81%97%e3%81%84%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%ab%e9%80%81%e3%82%8b%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%82%8b%e3%81%a7%e3%81%97%e3%82%87%e3%81%86%e3%81%8b%ef%bc%9f%e4%b8%80%e8%88%ac%e7%9a%84%e3%81%aa%e6%96%b9%e6%b3%95%e3%81%af%e5%86%97%e9%95%b7%e6%80%a7%e3%82%92%e3%82%82%e3%81%9f%e3%81%9b%e3%82%8b%e3%81%93%e3%81%a8%e3%81%a7%e3%81%99%e3%80%82%e4%be%8b%e3%81%88%e3%81%b0%e3%80%81Majority%20%28logic%29%20Decoding%e3%81%a8%e3%81%84%e3%81%86%e6%96%b9%e6%b3%95%e3%81%a7%e3%81%af%e3%80%81%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e5%85%83%e3%81%ae%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%242r%2b1%24%e5%9b%9e%e7%b9%b0%e3%82%8a%e8%bf%94%e3%81%97%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e9%80%81%e3%82%8a%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%af%e7%b9%b0%e3%82%8a%e8%bf%94%e3%81%95%e3%82%8c%e3%81%9f%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e5%a4%9a%e6%95%b0%e6%b1%ba%e3%82%92%e5%8f%96%e3%82%8b%e3%81%93%e3%81%a8%e3%81%ab%e3%82%88%e3%81%a3%e3%81%a6%e6%ad%a3%e3%81%97%e3%81%84%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e5%be%97%e3%81%be%e3%81%99%e3%80%82%e4%b8%8a%e3%81%ae%e4%be%8b%e3%81%abMajority%20Decoding%e3%82%92%e9%81%a9%e7%94%a8%e3%81%97%e3%81%a6%e3%81%bf%e3%81%be%e3%81%97%e3%82%87%e3%81%86%e3%80%82%e8%88%9e%e5%9c%92%e3%81%95%e3%82%93%e3%81%af%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%82%92%242r%2b1%3d9%24%e5%9b%9e%e7%b9%b0%e3%82%8a%e8%bf%94%e3%81%97%e3%81%9f%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%a8%e3%81%84%e3%81%86%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e9%80%81%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e3%81%9d%e3%81%86%e3%81%99%e3%82%8b%e3%81%a8%e3%80%81%e3%81%a9%e3%81%ae%e3%82%88%e3%81%86%e3%81%ab%24r%3d4%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%82%92%e5%a4%89%e6%9b%b4%e3%81%97%e3%82%88%e3%81%86%e3%81%a8%e3%82%82%e3%80%81%249%24%e5%80%8b%e3%81%ae%ef%bc%88%e9%95%b7%e3%81%95%24k%3d8%24%e3%81%ae%ef%bc%89%e6%96%87%e5%ad%97%e5%88%97%e3%81%ae%e4%b8%ad%e3%81%a7%e6%9c%80%e3%82%82%e5%87%ba%e7%8f%be%e9%a0%bb%e5%ba%a6%e3%81%8c%e5%a4%9a%e3%81%84%e3%81%ae%e3%81%af%e3%80%8c%e3%82%a8%e3%82%b9%e3%83%91%e3%83%bc%e3%81%a7%e3%81%99%e3%81%8b%e3%82%89%e3%80%8d%e3%81%ab%e3%81%aa%e3%82%8a%e3%80%81%e8%8b%97%e6%9c%a8%e3%81%8f%e3%82%93%e3%81%af%e6%ad%a3%e3%81%97%e3%81%84%e3%83%a1%e3%83%83%e3%82%bb%e3%83%bc%e3%82%b8%e3%82%92%e5%8f%97%e3%81%91%e5%8f%96%e3%82%8b%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0aMajority%20Decoding%e3%81%af%e3%82%b7%e3%83%b3%e3%83%97%e3%83%ab%e3%81%a7%e3%82%8f%e3%81%8b%e3%82%8a%e3%82%84%e3%81%99%e3%81%84%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e7%9b%b4%e6%84%9f%e7%9a%84%e3%81%ab%e3%81%af%e3%81%aa%e3%82%93%e3%81%a8%e3%82%82%e5%8a%b9%e7%8e%87%e3%81%8c%e6%82%aa%e3%81%9d%e3%81%86%e3%81%ab%e6%80%9d%e3%81%88%e3%81%be%e3%81%99%e3%80%82%20%e3%82%82%e3%81%a3%e3%81%a8%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%af%e3%81%aa%e3%81%84%e3%81%ae%e3%81%a7%e3%81%97%e3%82%87%e3%81%86%e3%81%8b%ef%bc%9f%0a%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e9%96%a2%e4%bf%82%20%e4%b8%8a%e3%81%ae%e4%be%8b%e3%81%a7%e3%81%af%e6%97%a5%e6%9c%ac%e8%aa%9e%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e3%81%93%e3%81%93%e3%81%a7%e3%81%af0%2f1%e3%81%ae%e4%ba%8c%e5%80%a4%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%99%e3%80%82%e3%81%be%e3%81%9a%e3%80%81%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%ae%e5%ae%9a%e7%be%a9%e3%82%92%e4%bb%a5%e4%b8%8b%e3%81%ab%e7%a4%ba%e3%81%97%e3%81%be%e3%81%99%e3%80%82%0a%20%e5%ae%9a%e7%be%a94.3.3%ef%bc%88%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%ef%bc%89%20%e3%81%82%e3%82%8b%ef%bc%88%e5%9b%ba%e5%ae%9a%e3%81%95%e3%82%8c%e3%81%9f%ef%bc%89%e6%ad%a3%e3%81%ae%e6%95%b4%e6%95%b0%24k%2c%20n%2c%20r%24%e3%81%8c%e4%b8%8e%e3%81%88%e3%82%89%e3%82%8c%e3%82%8b%e3%80%82%ef%bc%92%e3%81%a4%e3%81%ae%e5%86%99%e5%83%8f%20%5cbegin%7balign%7d%20E%3a%20%5c%7b0%2c%201%5c%7d%5ek%20%5cto%20%5c%7b0%2c%201%5c%7d%5en%20%5cquad%20%5ctext%7band%7d%20%5cquad%20E%3a%20%5c%7b0%2c%201%5c%7d%5en%20%5cto%20%5c%7b0%2c%201%5c%7d%5ek%20%5cend%7balign%7d%20%e3%81%af%e3%80%81%e4%bb%bb%e6%84%8f%e3%81%ae%24x%20%5cin%20%5c%7b0%2c%201%5c%7d%5ek%24%e3%81%a8%e3%80%81%24E%28x%29%24%e3%81%a8%e6%9c%80%e5%a4%a7%e3%81%a7%24r%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e7%95%b0%e3%81%aa%e3%82%8b%e4%bb%bb%e6%84%8f%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%24y%24%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6%e3%80%81%24D%28y%29%3dx%24%e3%81%8c%e6%88%90%e3%82%8a%e7%ab%8b%e3%81%a4%e3%81%a8%e3%81%8d%e3%80%81%28%24r%24%e5%80%8b%e3%81%ae%e8%aa%a4%e3%82%8a%e3%82%92%e8%a8%82%e6%ad%a3%e3%81%a7%e3%81%8d%e3%82%8b%29%e7%ac%a6%e5%8f%b7%e5%86%99%e5%83%8f%e3%80%81%e5%be%a9%e5%8f%b7%e5%86%99%e5%83%8f%e3%81%a8%e3%81%84%e3%81%86%e3%80%82%24E%24%e3%82%92%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%80%81%24E%24%e3%81%ae%e5%83%8f%24E%28%5c%7b0%2c%201%5c%7d%5ek%29%24%e3%82%92%e7%ac%a6%e5%8f%b7%e8%a1%a8%ef%bc%88codebook%ef%bc%89%e3%81%a8%e3%81%84%e3%81%84%e3%80%81%e7%ac%a6%e5%8f%b7%e8%a1%a8%e3%81%ae%e5%90%84%e8%a6%81%e7%b4%a0%ef%bc%88%e3%81%99%e3%81%aa%e3%82%8f%e3%81%a1%e3%80%81%24E%28x%29%24%ef%bc%89%e3%82%92%e7%ac%a6%e5%8f%b7%e8%aa%9e%e3%81%a8%e3%81%84%e3%81%86%e3%80%82%20%20%24k%2c%20n%2c%20r%24%e3%81%af%e3%81%9d%e3%82%8c%e3%81%9e%e3%82%8c%e3%80%8c%e9%80%81%e3%82%8a%e3%81%9f%e3%81%84%e6%96%87%e5%ad%97%e5%88%97%e3%81%ae%e9%95%b7%e3%81%95%e3%80%8d%e3%80%8c%e8%aa%a4%e3%82%8a%e3%82%92%e8%80%83%e6%85%ae%e3%81%97%e3%81%a6%e9%80%81%e3%82%8b%e6%96%87%e5%ad%97%e3%81%ae%e9%95%b7%e3%81%95%e3%80%8d%e3%80%8c%e7%99%ba%e7%94%9f%e3%81%99%e3%82%8b%e6%9c%80%e5%a4%a7%e3%81%ae%e8%aa%a4%e3%82%8a%e3%81%ae%e6%95%b0%e3%80%8d%e3%81%ab%e5%af%be%e5%bf%9c%e3%81%97%e3%81%be%e3%81%99%e3%80%82%24n%24%e3%81%af%e5%b0%8f%e3%81%95%e3%81%91%e3%82%8c%e3%81%b0%e5%b0%8f%e3%81%95%e3%81%84%e3%81%bb%e3%81%a9%e3%80%81%e5%8a%b9%e7%8e%87%e3%81%ae%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%a8%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e5%89%8d%e8%bf%b0%e3%81%aeMajority%20decoding%e3%81%a7%e3%81%af%24n%3dk%282r%2b1%29%24%e3%81%a7%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e3%81%93%e3%82%8c%e3%82%88%e3%82%8a%e3%82%82%e5%8a%b9%e7%8e%87%e3%81%ae%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%8c%e5%ad%98%e5%9c%a8%e3%81%99%e3%82%8b%e3%81%ae%e3%81%8b%e3%81%8c%e6%b0%97%e3%81%ab%e3%81%aa%e3%82%8a%e3%81%be%e3%81%99%e3%80%82%e5%85%85%e5%a1%ab%e6%95%b0%e3%82%92%e4%bd%bf%e3%81%86%e3%81%93%e3%81%a8%e3%81%a7%e3%80%81%e3%82%88%e3%82%8a%e5%8a%b9%e7%8e%87%e3%81%ae%e8%89%af%e3%81%84%e6%96%b9%e6%b3%95%e3%81%8c%e5%ad%98%e5%9c%a8%e3%81%99%e3%82%8b%e3%81%93%e3%81%a8%e3%82%92%e4%b8%bb%e5%bc%b5%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0a%20%e8%a3%9c%e9%a1%8c4.3.4%20%e6%ad%a3%e3%81%ae%e6%95%b0%24k%2c%20r%24%e3%81%ab%e5%af%be%e3%81%97%e3%81%a6%e3%80%81%24n%24%e3%81%8c%20%5cbegin%7balign%7d%20%5clog%20%5cmathcal%7bP%7d%28%5c%7b0%2c%201%5c%7d%5en%2c%20d_H%2c%202r%29%20%5cge%20k%20%5cend%7balign%7d%20%e3%82%92%e6%ba%80%e3%81%9f%e3%81%99%e3%81%a8%e3%81%99%e3%82%8b%e3%80%82%e3%81%93%e3%81%ae%e3%81%a8%e3%81%8d%e3%80%81%24k%24%e3%83%93%e3%83%83%e3%83%88%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%82%92%24n%24%e3%83%93%e3%83%83%e3%83%88%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%e3%81%ab%e7%ac%a6%e5%8f%b7%e5%8c%96%e3%81%97%e3%80%81%24r%24%e5%80%8b%e3%81%ae%e8%aa%a4%e3%82%8a%e3%82%92%e8%a8%82%e6%ad%a3%e3%81%99%e3%82%8b%e3%81%93%e3%81%a8%e3%81%ae%e3%81%a7%e3%81%8d%e3%82%8b%e3%80%81%e8%aa%a4%e3%82%8a%e8%a8%82%e6%ad%a3%e7%ac%a6%e5%8f%b7%e3%81%8c%e5%ad%98%e5%9c%a8%e3%81%99%e3%82%8b%e3%80%82%20%e8%a8%bc%e6%98%8e%20%24%5cmathcal%7bN%7d%20%5csubseteq%20%5c%7b0%2c%201%5c%7d%5en%24%e3%82%92%e3%80%81%24n%24%e6%ac%a1%e5%85%83%e3%83%8f%e3%83%9f%e3%83%b3%e3%82%b0%e3%82%ad%e3%83%a5%e3%83%bc%e3%83%96%24%28%5c%7b0%2c%201%5c%7d%5en%2c%20d_H%29%24%e3%81%ae%e3%81%82%e3%82%8b%242r%24-separated%e3%81%a8%e3%81%99%e3%82%8b%e3%80%82%20%e5%ae%9a%e7%be%a9%e3%82%88%e3%82%8a%e3%80%81%24%5cmathcal%7bN%7d%24%e3%81%ae%e5%90%84%e8%a6%81%e7%b4%a0%24x%2c%20y%20%5cin%20%5cmathcal%7bN%7d%24%e3%81%af%e3%83%8f%e3%83%9f%e3%83%b3%e3%82%b0%e8%b7%9d%e9%9b%a2%e3%81%8c%242r%24%e3%82%88%e3%82%8a%e5%a4%a7%e3%81%8d%e3%81%84%e3%80%81%e3%81%99%e3%81%aa%e3%82%8f%e3%81%a1%e3%80%81%e4%ba%92%e3%81%84%e3%81%ab%242r%2b1%24%e5%80%8b%e4%bb%a5%e4%b8%8a%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e7%95%b0%e3%81%aa%e3%81%a3%e3%81%a6%e3%81%84%e3%82%8b%e3%80%82%e3%81%97%e3%81%9f%e3%81%8c%e3%81%a3%e3%81%a6%e3%80%81%24x%20%5cin%20%5cmathcal%7bN%7d%24%e3%81%af%e3%80%81%e6%9c%80%e5%a4%a7%e3%81%a7%24r%24%e5%80%8b%e3%81%ae%e6%96%87%e5%ad%97%e3%81%8c%e5%a4%89%e3%82%8f%e3%82%8a%24x%27%20%5cin%20%5c%7b0%2c%201%5c%7d%5en%24%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%9f%e3%81%a8%e3%81%97%e3%81%a6%e3%82%82%e3%80%81%24%5cmathcal%7bN%7d%24%e3%81%ae%e4%b8%ad%e3%81%a7%e6%9c%80%e3%82%82%e3%83%8f%e3%83%9f%e3%83%b3%e3%82%b0%e8%b7%9d%e9%9b%a2%e3%81%ae%e8%bf%91%e3%81%84%e8%a6%81%e7%b4%a0%e3%81%af%24x%24%e3%81%ae%e3%81%be%e3%81%be%e3%81%a7%e3%81%82%e3%82%8b%ef%bc%9a%20%5cbegin%7balign%7d%20x%20%3d%20%5cunderset%7by%20%5cin%20%5cmathcal%7bN%7d%7d%7b%5cmathrm%7bargmin%7d%7d%20%5c%20d_%7bH%7d%28y%2c%20x%27%29%2c%20%5c%20%5cforall%20x%27%5cin%20%5c%7b0%2c1%5c%7d%5en%20%5c%20%5ctext%7bs." aria-label=Tumblr>
+<i class="fab fa-tumblr fa-lg" aria-hidden=true></i>
+</a>
+</li>
+<li>
+<a class=icon href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fneonnnnn.github.io%2fposts%2fcovering-packing-easy-application%2f&t=%e8%a2%ab%e8%a6%86%e6%95%b0%e3%81%a8%e5%85%85%e5%a1%ab%e6%95%b0%e3%81%ae%e7%b0%a1%e5%8d%98%e3%81%aa%e5%bf%9c%e7%94%a8" aria-label="Hacker News">
+<i class="fab fa-hacker-news fa-lg" aria-hidden=true></i>
+</a>
+</li>
+</ul>
+</div>
+<div id=actions-footer>
+<a id=menu-toggle class=icon href=# onclick="return $('#nav-footer').toggle(),!1" aria-label=Menu>
+<i class="fas fa-bars fa-lg" aria-hidden=true></i> Menu</a>
+<a id=toc-toggle class=icon href=# onclick="return $('#toc-footer').toggle(),!1" aria-label=TOC>
+<i class="fas fa-list fa-lg" aria-hidden=true></i> TOC</a>
+<a id=share-toggle class=icon href=# onclick="return $('#share-footer').toggle(),!1" aria-label=Share>
+<i class="fas fa-share-alt fa-lg" aria-hidden=true></i> share</a>
+<a id=top style=display:none class=icon href=# onclick="$('html, body').animate({scrollTop:0},'fast')" aria-label="Top of Page">
+<i class="fas fa-chevron-up fa-lg" aria-hidden=true></i> Top</a>
+</div>
+</div>
+</div>
+<footer id=footer>
+<div class=footer-left>
+Copyright &copy; 2022 Kyohei Atarashi
+</div>
+<div class=footer-right>
+<nav>
+<ul>
+<li><a href=/>Home</a></li>
+<li><a href=/posts>Writings</a></li>
+<li><a href=/categories>Categories</a></li>
+<li><a href=/tags>Tags</a></li>
+<li><a href=/about>About</a></li>
+</ul>
+</nav>
+</div>
+</footer>
+</div>
+</body>
+<link rel=stylesheet href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+<script src=/js/code-copy.js></script>
+<script>MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],tags:'ams'},svg:{fontCache:'global'}}</script>
+<script type=text/javascript id=MathJax-script async src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script>
+</html>
