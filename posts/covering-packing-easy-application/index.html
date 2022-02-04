@@ -285,9 +285,9 @@ f(\bar{x}) - f(x^* ) &lt; \varepsilon, \ \text{where} \ x^* = \underset{x\in B_n
 \end{align}
 を満たす$\bar{x} \in B_n$を得ること、と定義します。この$\bar{x}$を得るための反復数の下界、すなわち、最悪ケースでどの程度の反復数が必要になるのか、ということについて考えます。特に、0階の最適化アルゴリズム、すなわち、関数の評価値だけを使うアルゴリズムについて考えます。</p>
 <h2 id=反復数の下界の評価>反復数の下界の評価</h2>
-<p>$\ell_{\infty}$ノルムの場合の証明方法を復習します。実行可能領域を$\lfloor L/2\varepsilon \rfloor^n$個のグリッド（$\ell_{\infty}$球）に分割し、最適化アルゴリズムを各クエリ$x_k$に対して$f(x_k)=0$を返してシミュレートします。そうすると、$N &lt; \lfloor L/2\varepsilon \rfloor^n$回の試行では、少なくとも１つ以上、アルゴリズムのクエリが入らないグリッドが存在します。そのようなグリッドを一つとり、その中心を$x^<em>$とし、関数を
+<p>$\ell_{\infty}$ノルムの場合の証明方法を復習します。実行可能領域を$\lfloor L/2\varepsilon \rfloor^n$個のグリッド（$\ell_{\infty}$球）に分割し、最適化アルゴリズムを各クエリ$x_k$に対して$f(x_k)=0$を返してシミュレートします。そうすると、$N &lt; \lfloor L/2\varepsilon \rfloor^n$回の試行では、少なくとも１つ以上、アルゴリズムのクエリが入らないグリッドが存在します。そのようなグリッドを一つとり、その中心を$x^*$とし、関数を
 \begin{align}
-f(x) = \min \{0, L \lVert x - x^</em> \rVert_{(\infty)} - \varepsilon\}.
+f(x) = \min \{0, L \lVert x - x^* \rVert_{(\infty)} - \varepsilon\}.
 \end{align}
 と定めることで、$\lfloor L/2\varepsilon \rfloor^n$未満の反復では$\varepsilon$-近似解を得ることのできない関数を作り、反復数の下界が$\lfloor L/2\varepsilon \rfloor^n$であると証明しました。</p>
 <p>上の証明でキモとなる操作の一つは、実行可能領域$B_n$を小さなノルム球で分割することでした。$\ell_{2}$ノルムの場合は、直感的にはこのような分割を行えなさそうであるため、同様の方法では証明ができなさそうに思えます。しかし、よく考えると、$B_n$を小さなノルム球で「分割」する必要はなく、小さなノルム球をいくつ「詰め込めるか」さえわかれば良いということがわかります：詰め込んだノルム球の数より少ない反復数の場合、クエリが入らないノルム球が存在するので、そのようなノルム球の中心に最適解を配置することで下界を導出することができます。すなわち、以下が成り立ちます。</p>
@@ -373,8 +373,8 @@ p\left(\sup_{\pmb{x}, \pmb{y} \in \mathcal{M} \subset \mathbb{R}^d} \lvert f(\pm
 <dt>証明</dt>
 <dd>$k$は定義より$\Delta=\pmb{x}-\pmb{y}$の一変数関数として書くことができる。$s$は
 \begin{align}
-s(\pmb{x}, \pmb{y}) &= \frac{1}{D}\sum_{j=1}^{D} \left(\cos \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \cos \left(\pmb{w}_j^\top \pmb{y}\right) + \sin \left(\pmb{w}<em>j^\top \pmb{x}\right) \cdot \sin \left(\pmb{w}_j^\top \pmb{y}\right)\right) \\\
-&= \frac{1}{D}\sum</em>{j=1}^{D} \cos \left(\pmb{w}_j^\top (\pmb{x}-\pmb{y})\right)
+s(\pmb{x}, \pmb{y}) &= \frac{1}{D}\sum_{j=1}^{D} \left(\cos \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \cos \left(\pmb{w}_j^\top \pmb{y}\right) + \sin \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \sin \left(\pmb{w}_j^\top \pmb{y}\right)\right) \\\
+&= \frac{1}{D}\sum_{j=1}^{D} \cos \left(\pmb{w}_j^\top (\pmb{x}-\pmb{y})\right)
 \end{align}
 と変形できるため、$s$も平行移動不変、ゆえに$f$も平行移動不変である。したがって、これ以降は$\mathcal{M}_{\Delta} := \{\pmb{x}-\pmb{y} : \pmb{x}, \pmb{y} \in \mathcal{M}\}$上で誤差$f$を考える。</dd>
 <dd>
