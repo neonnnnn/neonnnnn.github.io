@@ -281,7 +281,7 @@ B_n = \{x \in \mathbb{R}^n : \lVert x \rVert_2 \le 1\}
 \end{align}
 であるとします。また、「連続最適化問題を解く」は「$\varepsilon$-近似解（$\varepsilon>0$）を得る」こと、すなわち、
 \begin{align}
-f(\bar{x}) - f(x^{<em>}) &lt; \varepsilon, \ \text{where} \ x^{</em>} = \underset{x\in B _n} {\mathrm{argmin}}f(x)
+f(\bar{x}) - f(x^* ) &lt; \varepsilon, \ \text{where} \ x^* = \underset{x \in B _n} {\mathrm{argmin}}f(x)
 \end{align}
 を満たす$\bar{x} \in B_n$を得ること、と定義します。この$\bar{x}$を得るための反復数の下界、すなわち、最悪ケースでどの程度の反復数が必要になるのか、ということについて考えます。特に、0階の最適化アルゴリズム、すなわち、関数の評価値だけを使うアルゴリズムについて考えます。</p>
 <h2 id=反復数の下界の評価>反復数の下界の評価</h2>
@@ -373,7 +373,7 @@ p\left(\sup_{\pmb{x}, \pmb{y} \in \mathcal{M} \subset \mathbb{R}^d} \lvert f(\pm
 <dt>証明</dt>
 <dd>$k$は定義より$\Delta=\pmb{x}-\pmb{y}$の一変数関数として書くことができる。$s$は
 \begin{align}
-s(\pmb{x}, \pmb{y}) &= \frac{1}{D}\sum_{j=1}^{D} \left(\cos \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \cos \left(\pmb{w}_j^\top \pmb{y}\right) + \sin \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \sin \left(\pmb{w} <em>j^\top \pmb{y}\right)\right) \\\
+s(\pmb{x}, \pmb{y}) &= \frac{1}{D}\sum_{j=1}^{D} \left(\cos \left(\pmb{w} _j^\top \pmb{x}\right) \cdot \cos \left(\pmb{w} _j^\top \pmb{y}\right) + \sin \left(\pmb{w} _j^\top \pmb{x}\right) \cdot \sin \left(\pmb{w} <em>j^\top \pmb{y}\right)\right) \\\
 &= \frac{1}{D}\sum</em>{j=1}^{D} \cos \left(\pmb{w} _j^\top (\pmb{x}-\pmb{y})\right)
 \end{align}
 と変形できるため、$s$も平行移動不変、ゆえに$f$も平行移動不変である。したがって、これ以降は$\mathcal{M} _{\Delta} := \{\pmb{x}-\pmb{y} : \pmb{x}, \pmb{y} \in \mathcal{M}\}$上で誤差$f$を考える。</dd>
