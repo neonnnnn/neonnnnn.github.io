@@ -277,11 +277,11 @@ B_n = \{x \in \mathbb{R}^n : \lVert x \rVert_2 \le 1\}
 \end{align}
 であり、また、$f$は$\ell_{2}$ノルムの意味で$L$-リプシッツ連続
 \begin{align}
-|f(x)-f(y)| \le L \lVert x - y \rVert _{2}, \forall x, y \in B _n, \exists L > 0
+|f(x)-f(y)| \le L \lVert x - y \rVert_{2}, \forall x, y \in B_n, \exists L > 0
 \end{align}
 であるとします。また、「連続最適化問題を解く」は「$\varepsilon$-近似解（$\varepsilon>0$）を得る」こと、すなわち、
 \begin{align}
-f(\bar{x}) - f(x^* ) &lt; \varepsilon, \ \text{where} \ x^* = \underset{x \in B _n} {\mathrm{argmin}}f(x)
+f(\bar{x}) - f(x^* ) &lt; \varepsilon, \ \text{where} \ x^* = \underset{x\in B_n} {\mathrm{argmin}}f(x)
 \end{align}
 を満たす$\bar{x} \in B_n$を得ること、と定義します。この$\bar{x}$を得るための反復数の下界、すなわち、最悪ケースでどの程度の反復数が必要になるのか、ということについて考えます。特に、0階の最適化アルゴリズム、すなわち、関数の評価値だけを使うアルゴリズムについて考えます。</p>
 <h2 id=反復数の下界の評価>反復数の下界の評価</h2>
@@ -313,7 +313,7 @@ f(x) = \min \left\{0, L \lVert x - x^* \rVert_{2} - \varepsilon\right\}.
 であり、これを補題2.1に適用することで主張を得る。</dd>
 </dl>
 <h1 id=ランダムフーリエ特徴の誤差の評価>ランダムフーリエ特徴の誤差の評価</h1>
-<p>ランダムフーリエ特徴[2]について簡単に説明します。ランダムフーリエ特徴[2]は、カーネル法、特に、平行移動不変なカーネル関数を用いるカーネル法の近似アルゴリズムの一つです。平行移動不変なカーネル関数とは、二つの入力$\pmb{x}, \pmb{y} \in \mathbb{R}^d$の差$\pmb{x}-\pmb{y}$の一変数関数として書けるようなカーネル関数のことで、例えばRBFカーネル$k(\pmb{x}, \pmb{y}) = \exp (-\lVert \pmb{x}-\pmb{y}\rVert _2^2/ (2\sigma^2))$等が該当します（以降、平行移動不変な二変数関数を$\pmb{x}-\pmb{y}$の一変数関数とみなし、$k(\pmb{x}-\pmb{y})$のように書くことがあります）。最大値が1にスケーリングされた平行移動不変なカーネル関数$k:\mathbb{R}^d\times\mathbb{R}^d\to\mathbb{R}$に対する、$2D$次元のランダムフーリエ特徴写像$z: \mathbb{R}^d \to \mathbb{R}^{2D}$は以下で定義されます：
+<p>ランダムフーリエ特徴[2]について簡単に説明します。ランダムフーリエ特徴[2]は、カーネル法、特に、平行移動不変なカーネル関数を用いるカーネル法の近似アルゴリズムの一つです。平行移動不変なカーネル関数とは、二つの入力$\pmb{x}, \pmb{y} \in \mathbb{R}^d$の差$\pmb{x}-\pmb{y}$の一変数関数として書けるようなカーネル関数のことで、例えばRBFカーネル$k(\pmb{x}, \pmb{y}) = \exp (-\lVert \pmb{x}-\pmb{y}\rVert_2^2/ (2\sigma^2))$等が該当します（以降、平行移動不変な二変数関数を$\pmb{x}-\pmb{y}$の一変数関数とみなし、$k(\pmb{x}-\pmb{y})$のように書くことがあります）。最大値が1にスケーリングされた平行移動不変なカーネル関数$k:\mathbb{R}^d\times\mathbb{R}^d\to\mathbb{R}$に対する、$2D$次元のランダムフーリエ特徴写像$z: \mathbb{R}^d \to \mathbb{R}^{2D}$は以下で定義されます：
 \begin{align}
 z(\pmb{x}) := \frac{1}{\sqrt{D}}\begin{pmatrix}
 \cos \left(\pmb{w}_1^\top \pmb{x}\right) \\\
@@ -324,7 +324,7 @@ z(\pmb{x}) := \frac{1}{\sqrt{D}}\begin{pmatrix}
 \end{pmatrix}
 \label{eq:random_fourier_feature}
 \end{align}
-ここで、$\pmb{w} _{i} \in \mathbb{R}^d, \ i \in [D]$は各要素がカーネル関数$k$によって定まる適切な分布からサンプリングされたベクトルです。$D$はユーザが定めるパラメータで、$D$はモンテカルロサンプリングにおけるサンプリング数のようなものだと思えばよいです（大きいほど近似精度が良くなります）。$\pmb{w} _{i}$の分布は近似したいカーネル関数に依存しますが、よく知られたものだと、例えばRBFカーネル$k(\pmb{x}, \pmb{y})=\exp (-\lVert \pmb{x}-\pmb{y}\rVert_2^2/2\sigma^2)$のときはガウス分布$\mathcal{N}(0, \sigma^2)$になります。</p>
+ここで、$\pmb{w}_{i} \in \mathbb{R}^d, \ i \in [D]$は各要素がカーネル関数$k$によって定まる適切な分布からサンプリングされたベクトルです。$D$はユーザが定めるパラメータで、$D$はモンテカルロサンプリングにおけるサンプリング数のようなものだと思えばよいです（大きいほど近似精度が良くなります）。$\pmb{w}_{i}$の分布は近似したいカーネル関数に依存しますが、よく知られたものだと、例えばRBFカーネル$k(\pmb{x}, \pmb{y})=\exp (-\lVert \pmb{x}-\pmb{y}\rVert_2^2/2\sigma^2)$のときはガウス分布$\mathcal{N}(0, \sigma^2)$になります。</p>
 <p>上述したランダムフーリエ特徴はカーネル関数$k$を内積の意味で近似します。より正確に言うと、ランダムフーリエ特徴の内積は、元のカーネル関数の不偏推定量になっています：
 \begin{align}
 \mathbb{E}_{\pmb{W}}[z(\pmb{x})^\top z(\pmb{y})] = k(\pmb{x}, \pmb{y}) \ \forall \pmb{x}, \pmb{y} \in \mathbb{R}^d.
@@ -366,39 +366,39 @@ f(\pmb{x}, \pmb{y}) &:= s(\pmb{x}, \pmb{y}) - k(\pmb{x}, \pmb{y})
 \end{align}
 を満たすならば、
 \begin{align}
-p\left(\sup_{\pmb{x}, \pmb{y} \in \mathcal{M} \subset \mathbb{R}^d} \lvert f(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \le 72 \left(\frac{\mathrm{diam}(\mathcal{M})\sigma _p}{\varepsilon}\right)^2 \exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)
+p\left(\sup_{\pmb{x}, \pmb{y} \in \mathcal{M} \subset \mathbb{R}^d} \lvert f(\pmb{x}, \pmb{y})\rvert \ge \varepsilon \right) \le 72 \left(\frac{\mathrm{diam}(\mathcal{M})\sigma_p}{\varepsilon}\right)^2 \exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)
 \label{eq:random_fourier_error_uniform_bound}
 \end{align}
 が成り立つ。</dd>
 <dt>証明</dt>
 <dd>$k$は定義より$\Delta=\pmb{x}-\pmb{y}$の一変数関数として書くことができる。$s$は
 \begin{align}
-s(\pmb{x}, \pmb{y}) &= \frac{1}{D}\sum_{j=1}^{D} \left(\cos \left(\pmb{w} _j^\top \pmb{x}\right) \cdot \cos \left(\pmb{w} _j^\top \pmb{y}\right) + \sin \left(\pmb{w} _j^\top \pmb{x}\right) \cdot \sin \left(\pmb{w} <em>j^\top \pmb{y}\right)\right) \\\
-&= \frac{1}{D}\sum</em>{j=1}^{D} \cos \left(\pmb{w} _j^\top (\pmb{x}-\pmb{y})\right)
+s(\pmb{x}, \pmb{y}) &= \frac{1}{D}\sum_{j=1}^{D} \left(\cos \left(\pmb{w}_j^\top \pmb{x}\right) \cdot \cos \left(\pmb{w}_j^\top \pmb{y}\right) + \sin \left(\pmb{w}<em>j^\top \pmb{x}\right) \cdot \sin \left(\pmb{w}_j^\top \pmb{y}\right)\right) \\\
+&= \frac{1}{D}\sum</em>{j=1}^{D} \cos \left(\pmb{w}_j^\top (\pmb{x}-\pmb{y})\right)
 \end{align}
-と変形できるため、$s$も平行移動不変、ゆえに$f$も平行移動不変である。したがって、これ以降は$\mathcal{M} _{\Delta} := \{\pmb{x}-\pmb{y} : \pmb{x}, \pmb{y} \in \mathcal{M}\}$上で誤差$f$を考える。</dd>
+と変形できるため、$s$も平行移動不変、ゆえに$f$も平行移動不変である。したがって、これ以降は$\mathcal{M}_{\Delta} := \{\pmb{x}-\pmb{y} : \pmb{x}, \pmb{y} \in \mathcal{M}\}$上で誤差$f$を考える。</dd>
 <dd>
-<p>$\mathcal{M}$がコンパクトであるという仮定より、$\mathcal{M} _{\Delta}$もまたコンパクトである。さらに、$\mathcal{M} _{\Delta}$は中心$\pmb{0}$、半径$\mathrm{diam}(\mathcal{M})$のユークリッド球に覆われる：$\mathcal{M} _{\Delta} \subset B_2^d(\pmb{0}, \mathrm{diam}(\mathcal{M}))$。ゆえに、<a href=https://neonnnnn.github.io/posts/covering-packing/>前回の記事</a>で示したユークリッド球の被覆数の上界（系4.2.13）より、$\mathcal{M} _{\Delta}$の$r$-被覆数$\mathcal{N}(\mathcal{M} _{\Delta}, r)$について
+<p>$\mathcal{M}$がコンパクトであるという仮定より、$\mathcal{M}_{\Delta}$もまたコンパクトである。さらに、$\mathcal{M}_{\Delta}$は中心$\pmb{0}$、半径$\mathrm{diam}(\mathcal{M})$のユークリッド球に覆われる：$\mathcal{M}_{\Delta} \subset B_2^d(\pmb{0}, \mathrm{diam}(\mathcal{M}))$。ゆえに、<a href=https://neonnnnn.github.io/posts/covering-packing/>前回の記事</a>で示したユークリッド球の被覆数の上界（系4.2.13）より、$\mathcal{M}_{\Delta}$の$r$-被覆数$\mathcal{N}(\mathcal{M}_{\Delta}, r)$について
 \begin{align}
-\mathcal{N}(\mathcal{M} _{\Delta}, r) \le \mathcal{N}(B_2^d(\pmb{0}, \mathrm{diam}(\mathcal{M})), r) \le \left(\frac{\mathrm{diam}(\mathcal{M})}{r} + 2\right)^{d}\ \forall r > 0
+\mathcal{N}(\mathcal{M}_{\Delta}, r) \le \mathcal{N}(B_2^d(\pmb{0}, \mathrm{diam}(\mathcal{M})), r) \le \left(\frac{\mathrm{diam}(\mathcal{M})}{r} + 2\right)^{d}\ \forall r > 0
 \label{eq:covering_number_upper_bound}
 \end{align}
 が成り立つ。</p>
 </dd>
 <dd>
-<p>$\mathcal{N} = \{\Delta _{i}\} _{i=1}^{T} \subset \mathcal{M} _{\Delta}$を$\mathcal{M} _{\Delta}$の$r$-netの一つとする。また、$L _f > 0$を、$f$の（$\mathcal{M} _{\Delta}$での）リプシッツ定数であるとする。このとき、$\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert$について
+<p>$\mathcal{N} = \{\Delta_{i}\}_{i=1}^{T} \subset \mathcal{M}_{\Delta}$を$\mathcal{M}_{\Delta}$の$r$-netの一つとする。また、$L_f > 0$を、$f$の（$\mathcal{M}_{\Delta}$での）リプシッツ定数であるとする。このとき、$\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert$について
 \begin{align}
-\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert &\le \max _{i \in [T]} \max _{\Delta \in B _{2}^d(\Delta _i, r)} |f(\Delta)| \label{eq:supf_le1} \\\
-& \le \max _{i \in [T]} \max _{\Delta \in B _{2}^d(\Delta _i, r)} \left(L _f \lVert \Delta _i - \Delta \rVert _2 + \lvert f(\Delta _i) \rvert \right) \label{eq:supf_le2}\\\
-&\le L _f \cdot r + \max _{i \in [T]} |f(\Delta _i)|. \label{eq:supf_le3}
+\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert &\le \max_{i \in [T]} \max_{\Delta \in B_{2}^d(\Delta_i, r)} |f(\Delta)| \label{eq:supf_le1} \\\
+& \le \max_{i \in [T]} \max_{\Delta \in B_{2}^d(\Delta_i, r)} \left(L_f \lVert \Delta_i - \Delta \rVert_2 + \lvert f(\Delta_i) \rvert \right) \label{eq:supf_le2}\\\
+&\le L_f \cdot r + \max_{i \in [T]} |f(\Delta_i)|. \label{eq:supf_le3}
 \end{align}
-が成り立つ。ただし、一つ目の不等式\eqref{eq:supf_le1}では$\mathcal{N}$が$r$-netである（すなわち、$\{\Delta_i \} _{i=1}^{T}$を中心とする半径$r$の球の和集合が$\mathcal{M} _{\Delta}$を覆っている）こと、二つ目の不等式\eqref{eq:supf_le2}では$f$の$\mathcal{M}$でのリプシッツ連続性、最後の不等式\eqref{eq:supf_le3}では再び$r$-netであることを利用した。不等式\eqref{eq:supf_le3}より、$\max _{i \in [T]}\lvert f(\Delta_i) \rvert \le \frac{\varepsilon}{2}$かつ$L_f \le \varepsilon / (2r)$ならば$\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \le \varepsilon$となることがわかる。それぞれの確率の上限を求める。まず、Union Boundと補題3.1より、
+が成り立つ。ただし、一つ目の不等式\eqref{eq:supf_le1}では$\mathcal{N}$が$r$-netである（すなわち、$\{\Delta_i \}_{i=1}^{T}$を中心とする半径$r$の球の和集合が$\mathcal{M}_{\Delta}$を覆っている）こと、二つ目の不等式\eqref{eq:supf_le2}では$f$の$\mathcal{M}$でのリプシッツ連続性、最後の不等式\eqref{eq:supf_le3}では再び$r$-netであることを利用した。不等式\eqref{eq:supf_le3}より、$\max_{i \in [T]}\lvert f(\Delta_i) \rvert \le \frac{\varepsilon}{2}$かつ$L_f \le \varepsilon / (2r)$ならば$\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert \le \varepsilon$となることがわかる。それぞれの確率の上限を求める。まず、Union Boundと補題3.1より、
 \begin{align}
-p\left(\max _{i \in [T]}\lvert f(\Delta_i) \rvert \ge \frac{\varepsilon}{2}\right) \le 2T\exp \left(-\frac{D\varepsilon^2}{16}\right) \label{eq:nat_max_error_bound}
+p\left(\max_{i \in [T]}\lvert f(\Delta_i) \rvert \ge \frac{\varepsilon}{2}\right) \le 2T\exp \left(-\frac{D\varepsilon^2}{16}\right) \label{eq:nat_max_error_bound}
 \end{align}
 を得る。Markovの不等式より、
 \begin{align}
-p\left(L _f \ge \frac{\varepsilon}{2r} \right) = p\left(L _f^2 \ge \left(\frac{\varepsilon}{2r}\right)^2 \right) \le \mathbb{E}\left[L _f^2\right ] \cdot \left(\frac{2r}{\varepsilon}\right)^2
+p\left(L_f \ge \frac{\varepsilon}{2r} \right) = p\left(L_f^2 \ge \left(\frac{\varepsilon}{2r}\right)^2 \right) \le \mathbb{E}\left[L_f^2\right ] \cdot \left(\frac{2r}{\varepsilon}\right)^2
 \end{align}
 であり、さらに$\mathbb{E}[L_f^2]$は以下のように計算できる（この計算はやや面倒であるのと、主として扱いたい部分でもないので省略、詳細は[3]を参照）：
 \begin{align}
@@ -406,23 +406,23 @@ p\left(L _f \ge \frac{\varepsilon}{2r} \right) = p\left(L _f^2 \ge \left(\frac{\
 \end{align}
 それゆえ、
 \begin{align}
-p\left(L _f \ge \frac{\varepsilon}{2r} \right) \le \left(\frac{2\sigma _p r}{\varepsilon}\right)^2 \label{eq:lf_bound}
+p\left(L_f \ge \frac{\varepsilon}{2r} \right) \le \left(\frac{2\sigma_p r}{\varepsilon}\right)^2 \label{eq:lf_bound}
 \end{align}
 が成り立つ。不等式\eqref{eq:lf_bound}と\eqref{eq:nat_max_error_bound}を用いることで、
 \begin{align}
-p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \le \varepsilon\right) &\ge 1 - 2 T \exp \left(-\frac{D\varepsilon^2}{16}\right) - \left(\frac{2\sigma _p r}{\varepsilon}\right)^2 \\\
-\to p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) & \le 2 T \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2
+p\left(\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert \le \varepsilon\right) &\ge 1 - 2 T \exp \left(-\frac{D\varepsilon^2}{16}\right) - \left(\frac{2\sigma_p r}{\varepsilon}\right)^2 \\\
+\to p\left(\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) & \le 2 T \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma_p r}{\varepsilon}\right)^2
 \end{align}
 を得る。$\mathcal{N}$は任意の$r$-netであったから、被覆数の不等式\eqref{eq:covering_number_upper_bound}より、さらに
 \begin{align}
-p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) \le 2 \left(\frac{2\mathrm{diam}(\mathcal{M})}{r} + 1\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2
+p\left(\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) \le 2 \left(\frac{2\mathrm{diam}(\mathcal{M})}{r} + 1\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma_p r}{\varepsilon}\right)^2
 \end{align}
 を得る。$r &lt; \mathrm{diam}(\mathcal{M})$とすると、$2\mathrm{diam}(\mathcal{M})/r + 1 &lt; 3\mathrm{diam}(\mathcal{M})/r$より、さらに
 \begin{align}
-p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) \le 2 \left(\frac{3\mathrm{diam}(\mathcal{M})}{r}\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2
+p\left(\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert \ge \varepsilon\right) \le 2 \left(\frac{3\mathrm{diam}(\mathcal{M})}{r}\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma_p r}{\varepsilon}\right)^2
 \label{eq:random_fourier_error_uniform_bound_simple}
 \end{align}
-を得る。ここで、$c _1 r^{-d} + c _2 r^2$は、$r=(c _1 / c _2)^{1/(d+2)}$とすると、$c _1 r^{-d} + c _2 r^2=2 c _2 ^{d/(d+2)} c_1 ^{2/(d+2)}$と書ける。これを\eqref{eq:random_fourier_error_uniform_bound_simple}に適用すると、$c_1$と$c_2$はそれぞれ
+を得る。ここで、$c_1 r^{-d} + c_2 r^2$は、$r=(c_1 / c_2)^{1/(d+2)}$とすると、$c_1 r^{-d} + c_2 r^2=2 c_2 ^{d/(d+2)} c_1 ^{2/(d+2)}$と書ける。これを\eqref{eq:random_fourier_error_uniform_bound_simple}に適用すると、$c_1$と$c_2$はそれぞれ
 \begin{align}
 c_1=2 \left(3\mathrm{diam}(\mathcal{M})\right)^{d}\exp\left(-\frac{D\varepsilon^2}{16}\right), \ c_2=\left(\frac{2\sigma_p}{\varepsilon}\right)^2
 \end{align}
@@ -433,9 +433,9 @@ r = \left(2 \left(3\mathrm{diam}(\mathcal{M})\right)^{d}\exp\left(-\frac{D\varep
 \end{align}
 とすると、
 \begin{align}
-p\left(\sup _{\Delta \in \mathcal{M} _{\Delta}} \lvert f(\Delta) \rvert > \varepsilon\right) &\le 2 \left(\frac{3\mathrm{diam}(\mathcal{M})}{r}\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma _p r}{\varepsilon}\right)^2 \\\
-&= 2\cdot 2^{\frac{2+2d}{d+2}}\cdot 3^\frac{2d}{d+2}\exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)\left(\frac{\mathrm{diam}(\mathcal{M})\sigma _p}{\varepsilon}\right)^{\frac{2d}{d+2}} \\\
-&\le 72 \left(\frac{\mathrm{diam}(\mathcal{M})\sigma _p}{\varepsilon}\right)^2 \exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)
+p\left(\sup_{\Delta \in \mathcal{M}_{\Delta}} \lvert f(\Delta) \rvert > \varepsilon\right) &\le 2 \left(\frac{3\mathrm{diam}(\mathcal{M})}{r}\right)^{d} \exp \left(-\frac{D\varepsilon^2}{16}\right) + \left(\frac{2\sigma_p r}{\varepsilon}\right)^2 \\\
+&= 2\cdot 2^{\frac{2+2d}{d+2}}\cdot 3^\frac{2d}{d+2}\exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)\left(\frac{\mathrm{diam}(\mathcal{M})\sigma_p}{\varepsilon}\right)^{\frac{2d}{d+2}} \\\
+&\le 72 \left(\frac{\mathrm{diam}(\mathcal{M})\sigma_p}{\varepsilon}\right)^2 \exp \left(-\frac{D\varepsilon^2}{8(d+2)}\right)
 \end{align}
 が成り立つ。これはまさしく式\eqref{eq:random_fourier_error_uniform_bound}である。ただし、最後の不等式では\eqref{eq:random_fourier_condition}の1つ目を利用した。また、式\eqref{eq:appropriate_r}で定められた$r$は$r &lt; \mathrm{diam}(\mathcal{M})$の条件を満たす：
 \begin{align}
